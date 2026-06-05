@@ -42,6 +42,11 @@ const tabs = [
 export default function Layout() {
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
+      {/* Rellena la zona detrás de la Dynamic Island / notch con el azul del header */}
+      <div
+        className="fixed inset-x-0 top-0 z-50 bg-blue-900"
+        style={{ height: 'env(safe-area-inset-top)' }}
+      />
       <main
         style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom), 12px) + 5rem)' }}
       >
