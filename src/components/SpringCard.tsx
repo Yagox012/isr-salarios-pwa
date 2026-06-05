@@ -22,6 +22,7 @@ export function SpringCard<T extends ElementType = 'div'>({
       {...props}
       style={{
         ...style,
+        willChange: 'transform',
         transform: pressed ? 'scale(0.964)' : 'scale(1)',
         transition: pressed
           ? 'transform 0.08s ease-out'
