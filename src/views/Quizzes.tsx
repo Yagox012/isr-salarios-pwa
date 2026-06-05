@@ -9,7 +9,7 @@ export default function Quizzes() {
   if (unidad) {
     const reactivos = unidad.temas.flatMap((t) => t.quiz);
     return (
-      <div className="text-slate-800 dark:text-slate-100">
+      <div key={unidad.id} className="section-enter text-slate-800 dark:text-slate-100">
         <header className="bg-blue-900 px-5 pb-5 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
           <button type="button" onClick={() => setUnidadActiva(null)} className="text-sm text-blue-300">‹ Quizzes</button>
           <h1 className="mt-1 text-xl font-bold leading-tight">Examen · Unidad {unidad.numero}</h1>

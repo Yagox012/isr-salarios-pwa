@@ -3,8 +3,53 @@
 
 html {
   background-color: #f8fafc;
+  /* Extiende el color del header detrás de la Dynamic Island / status bar */
+  background-image: linear-gradient(
+    to bottom,
+    #1e3a8a 0px,
+    #1e3a8a env(safe-area-inset-top),
+    #f8fafc env(safe-area-inset-top)
+  );
 }
 
 html.dark {
   background-color: #020617;
+  background-image: linear-gradient(
+    to bottom,
+    #1e3a8a 0px,
+    #1e3a8a env(safe-area-inset-top),
+    #020617 env(safe-area-inset-top)
+  );
+}
+
+/* ── Animaciones de transición de página ── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Transición de secciones/pestañas dentro de una página */
+@keyframes section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-enter {
+  animation: section-enter 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
