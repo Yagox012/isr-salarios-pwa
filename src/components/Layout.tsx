@@ -40,42 +40,47 @@ const tabs = [
   { to: '/ajustes',      label: 'Ajustes',  Icon: IconAjustes,  end: false },
 ];
 
-const N = tabs.length; // 5
+const N = tabs.length;
 
 export default function Layout() {
   const { pathname } = useLocation();
-  const navigate  = useNavigate();
-  const navRef    = useRef<HTMLElement>(null);
-  const tabsRef   = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const tabsRef  = useRef<HTMLDivElement>(null);
+  const releaseTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
   );
 
   /*
-   * continuousT: posición del indicador expresada como porcentaje de su
-   * propio ancho (20 % de nav). Valor normal = activeIndex * 100.
-   * Durante el arrastre = posición exacta del dedo convertida a este sistema.
+   * Máquina de estados del indicador:
+   *
+   * continuousT = null  → posición calculada desde activeIndex (idle / post-spring)
+   * continuousT = número → posición explícita (durante drag o snap final)
+   * isPressing          → si el dedo está apoyado (controla forma y tamaño)
+   * dragIndex           → tab bajo el dedo (para navegar al soltar)
+   *
+   * La transición spring se activa solo cuando isPressing=false.
+   * Así evitamos el doble salto al soltar.
    */
   const [continuousT, setContinuousT] = useState<number | null>(null);
   const [isPressing,  setIsPressing]  = useState(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
-  /* Convierte clientX → { T, idx } */
+  /* Posición del indicador: explícita si la tenemos, sino desde activeIndex */
+  const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
+
+  /* Convierte clientX → { T: posición continua, idx: tab más cercano } */
   const fromX = useCallback((clientX: number) => {
-    const el = navRef.current ?? tabsRef.current;
-    if (!el) return { T: activeIndex * 100, idx: activeIndex };
-    const { left, width } = el.getBoundingClientRect();
+    if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
+    const { left, width } = tabsRef.current.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - left) / width));
-    // Centro del indicador en ratio → T en % de ancho propio del indicador
-    // Tab N centro = (N + 0.5) / totalTabs  →  T = N * 100
-    // Fórmula continua: T = (ratio * N - 0.5) * 100, clamped [0, (N-1)*100]
     const T   = Math.max(0, Math.min((N - 1) * 100, (ratio * N - 0.5) * 100));
     const idx = Math.max(0, Math.min(N - 1, Math.floor(ratio * N)));
     return { T, idx };
   }, [activeIndex]);
 
-  /* touchmove no-passive para poder preventDefault (evita scroll) */
+  /* touchmove no-passive para preventDefault (bloquea scroll) */
   useEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
@@ -91,23 +96,36 @@ export default function Layout() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
-    const { T, idx } = fromX(e.touches[0].clientX);
+    clearTimeout(releaseTimer.current);
+    /*
+     * El indicador se QUEDA donde está (activeIndex * 100).
+     * Solo activamos isPressing (escala + forma circular).
+     * El drag real empieza con touchMove.
+     */
+    setContinuousT(activeIndex * 100);
+    setDragIndex(activeIndex);
     setIsPressing(true);
-    setContinuousT(T);
-    setDragIndex(idx);
   };
 
   const handleTouchEnd = () => {
-    if (dragIndex !== null) navigate(tabs[dragIndex].to);
+    const finalIdx = dragIndex ?? activeIndex;
+    /*
+     * 1. Fijamos continuousT al destino ANTES de desactivar isPressing.
+     *    Así la transición spring va desde la posición actual → destino,
+     *    sin jamás pasar por el viejo activeIndex (que causa el salto errático).
+     * 2. Desactivamos isPressing → habilita la transición spring.
+     * 3. Navegamos → actualiza pathname/activeIndex en segundo plano.
+     * 4. Después del spring (500 ms) limpiamos continuousT; para entonces
+     *    activeIndex ya coincide con finalIdx y no hay movimiento visible.
+     */
+    setContinuousT(finalIdx * 100);
     setIsPressing(false);
-    setContinuousT(null);
-    setDragIndex(null);
+    navigate(tabs[finalIdx].to);
+    releaseTimer.current = setTimeout(() => {
+      setContinuousT(null);
+      setDragIndex(null);
+    }, 500);
   };
-
-  /* Posición del indicador: continua durante drag, discreta en reposo */
-  const indicatorT = isPressing && continuousT !== null
-    ? continuousT
-    : activeIndex * 100;
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
@@ -120,9 +138,7 @@ export default function Layout() {
         className="fixed inset-x-0 bottom-0 z-10 flex justify-center"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
-        {/* overflow visible para que el indicador pueda salirse al presionar */}
         <nav
-          ref={navRef}
           className="relative mx-4 w-full max-w-md rounded-[2rem]"
           style={{
             background: 'rgba(255,255,255,0.38)',
@@ -130,40 +146,50 @@ export default function Layout() {
             WebkitBackdropFilter: 'blur(32px) saturate(1.8)',
             border: '1px solid rgba(255,255,255,0.55)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset',
+            /* overflow visible para que el indicador salga por arriba al presionar */
+            overflow: 'visible',
           }}
         >
-          {/* Dark-mode overlay */}
+          {/* Dark-mode overlay (clip a rounded corners manualmente) */}
           <div
             className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
             style={{ background: 'rgba(15,23,42,0.45)' }}
           />
 
-          {/* Indicador pill — sigue el dedo en tiempo real */}
+          {/* Indicador — posición continua, forma cambia al presionar */}
           <div
             className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
             style={{
               width: `${100 / N}%`,
-              padding: '5px 6px',
-              /* Sin transición mientras arrastra; spring al soltar */
+              padding: '4px 5px',
+              zIndex: 1,
+              transform: `translateX(${indicatorT}%)`,
+              /* Spring al soltar; sin transición mientras arrastra */
               transition: isPressing
                 ? 'none'
                 : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
-              transform: `translateX(${indicatorT}%)`,
-              /* z-index encima del dark overlay pero debajo del texto */
-              zIndex: 1,
             }}
           >
             <div
-              className="h-full w-full rounded-[1.4rem]"
               style={{
+                width: '100%',
+                height: '100%',
                 background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
                 border: '1.5px solid rgba(96,165,250,0.55)',
                 boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                /* Crece visiblemente al presionar, puede salirse de la nav */
-                transform: isPressing ? 'scale(1.28)' : 'scale(1)',
-                transition: 'transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
+                /*
+                 * Pill → óvalo/círculo al presionar.
+                 * transform-origin bottom: crece hacia arriba saliendo de la nav.
+                 */
+                borderRadius: isPressing ? '50%' : '1.2rem',
+                transform: isPressing ? 'scale(1.35)' : 'scale(1)',
+                transformOrigin: 'center bottom',
+                transition: [
+                  'border-radius 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+                  'transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
+                ].join(', '),
               }}
             />
           </div>
