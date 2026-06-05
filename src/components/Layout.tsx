@@ -1,7 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
 /* --- Íconos (SVG en línea, estilo Feather) --- */
-const base = 'h-6 w-6';
+const base = 'h-[22px] w-[22px]';
 const IconInicio = () => (
   <svg className={base} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9.5 12 3l9 6.5" /><path d="M5 9v11h14V9" />
@@ -32,46 +32,94 @@ const IconAjustes = () => (
 );
 
 const tabs = [
-  { to: '/', label: 'Inicio', Icon: IconInicio, end: true },
-  { to: '/unidades', label: 'Unidades', Icon: IconUnidades },
-  { to: '/calculadoras', label: 'Cálculos', Icon: IconCalc },
-  { to: '/quizzes', label: 'Quizzes', Icon: IconQuiz },
-  { to: '/ajustes', label: 'Ajustes', Icon: IconAjustes },
+  { to: '/', label: 'Inicio',   Icon: IconInicio,   end: true  },
+  { to: '/unidades',     label: 'Unidades',  Icon: IconUnidades, end: false },
+  { to: '/calculadoras', label: 'Cálculos',  Icon: IconCalc,     end: false },
+  { to: '/quizzes',      label: 'Quizzes',   Icon: IconQuiz,     end: false },
+  { to: '/ajustes',      label: 'Ajustes',   Icon: IconAjustes,  end: false },
 ];
 
 export default function Layout() {
+  const { pathname } = useLocation();
+
+  const activeIndex = tabs.findIndex(({ to, end }) =>
+    end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
+  );
+
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
-      <main
-        style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom), 12px) + 5rem)' }}
-      >
+      <main style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom), 12px) + 6rem)' }}>
         <Outlet />
       </main>
 
-      <nav
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95"
+      {/* ── Liquid Glass Nav ── */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-10 flex justify-center"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
-        <div className="mx-auto flex max-w-md">
-          {tabs.map(({ to, label, Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors duration-200 ${
-                  isActive
-                    ? 'text-blue-700 dark:text-blue-400'
-                    : 'text-slate-400 dark:text-slate-500'
-                }`
-              }
+        <nav className="relative mx-4 w-full max-w-md overflow-hidden rounded-[2rem]"
+          style={{
+            background: 'rgba(255,255,255,0.38)',
+            backdropFilter: 'blur(32px) saturate(1.8)',
+            WebkitBackdropFilter: 'blur(32px) saturate(1.8)',
+            border: '1px solid rgba(255,255,255,0.55)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset',
+          }}
+        >
+          {/* Dark-mode overlay */}
+          <div className="pointer-events-none absolute inset-0 hidden dark:block rounded-[2rem]"
+            style={{ background: 'rgba(15,23,42,0.45)' }}
+          />
+
+          {/* Sliding glass indicator circle */}
+          {activeIndex >= 0 && (
+            <div
+              className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
+              style={{
+                width: '20%',
+                transform: `translateX(${activeIndex * 100}%)`,
+                transition: 'transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
             >
-              <Icon />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </div>
-      </nav>
+              <div
+                className="h-[3.2rem] w-[3.2rem] rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,0.55)',
+                  boxShadow: '0 2px 16px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.9) inset',
+                  border: '1px solid rgba(255,255,255,0.75)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+              />
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="relative flex">
+            {tabs.map(({ to, label, Icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `flex flex-1 flex-col items-center gap-0.5 py-3 text-[11px] font-semibold transition-all duration-300 ${
+                    isActive
+                      ? 'text-blue-900 dark:text-white'
+                      : 'text-slate-400/90 dark:text-slate-400'
+                  }`
+                }
+                style={({ isActive }) => ({
+                  transform: isActive ? 'scale(1.08)' : 'scale(1)',
+                  transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.2s',
+                })}
+              >
+                <Icon />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      </div>
     </div>
   );
 }
