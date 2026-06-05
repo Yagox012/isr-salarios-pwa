@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 /* --- Íconos (SVG en línea, estilo Feather) --- */
 const base = 'h-[22px] w-[22px]';
@@ -32,19 +33,60 @@ const IconAjustes = () => (
 );
 
 const tabs = [
-  { to: '/', label: 'Inicio',   Icon: IconInicio,   end: true  },
-  { to: '/unidades',     label: 'Unidades',  Icon: IconUnidades, end: false },
-  { to: '/calculadoras', label: 'Cálculos',  Icon: IconCalc,     end: false },
-  { to: '/quizzes',      label: 'Quizzes',   Icon: IconQuiz,     end: false },
-  { to: '/ajustes',      label: 'Ajustes',   Icon: IconAjustes,  end: false },
+  { to: '/',             label: 'Inicio',   Icon: IconInicio,   end: true  },
+  { to: '/unidades',     label: 'Unidades', Icon: IconUnidades, end: false },
+  { to: '/calculadoras', label: 'Cálculos', Icon: IconCalc,     end: false },
+  { to: '/quizzes',      label: 'Quizzes',  Icon: IconQuiz,     end: false },
+  { to: '/ajustes',      label: 'Ajustes',  Icon: IconAjustes,  end: false },
 ];
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const navigate   = useNavigate();
+  const tabsRef    = useRef<HTMLDivElement>(null);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
   );
+
+  /* ── Estado de arrastre ── */
+  const [dragIndex,   setDragIndex]   = useState<number | null>(null);
+  const [isPressing,  setIsPressing]  = useState(false);
+
+  /* Índice que se muestra en el indicador: drag en curso o tab activo */
+  const displayIndex = isPressing && dragIndex !== null ? dragIndex : activeIndex;
+
+  /* Calcula el índice de tab a partir de la coordenada X del toque */
+  const indexFromX = useCallback((clientX: number): number => {
+    if (!tabsRef.current) return activeIndex;
+    const { left, width } = tabsRef.current.getBoundingClientRect();
+    const ratio = (clientX - left) / width;
+    return Math.max(0, Math.min(tabs.length - 1, Math.floor(ratio * tabs.length)));
+  }, [activeIndex]);
+
+  /* touchmove debe ser passive:false para poder llamar preventDefault */
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const onMove = (e: TouchEvent) => {
+      e.preventDefault();
+      setDragIndex(indexFromX(e.touches[0].clientX));
+    };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, [indexFromX]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsPressing(true);
+    setDragIndex(indexFromX(e.touches[0].clientX));
+  };
+
+  const handleTouchEnd = () => {
+    if (dragIndex !== null) navigate(tabs[dragIndex].to);
+    setIsPressing(false);
+    setDragIndex(null);
+  };
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
@@ -57,7 +99,8 @@ export default function Layout() {
         className="fixed inset-x-0 bottom-0 z-10 flex justify-center"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
-        <nav className="relative mx-4 w-full max-w-md overflow-hidden rounded-[2rem]"
+        <nav
+          className="relative mx-4 w-full max-w-md overflow-hidden rounded-[2rem]"
           style={{
             background: 'rgba(255,255,255,0.38)',
             backdropFilter: 'blur(32px) saturate(1.8)',
@@ -67,58 +110,76 @@ export default function Layout() {
           }}
         >
           {/* Dark-mode overlay */}
-          <div className="pointer-events-none absolute inset-0 hidden dark:block rounded-[2rem]"
+          <div
+            className="pointer-events-none absolute inset-0 hidden dark:block rounded-[2rem]"
             style={{ background: 'rgba(15,23,42,0.45)' }}
           />
 
-          {/* Sliding glass indicator — pill que cubre todo el tab */}
-          {activeIndex >= 0 && (
+          {/* Indicador deslizante — pill que sigue al dedo */}
+          {displayIndex >= 0 && (
             <div
               className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
               style={{
                 width: '20%',
-                transform: `translateX(${activeIndex * 100}%)`,
-                transition: 'transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 padding: '5px 6px',
+                transform: `translateX(${displayIndex * 100}%)`,
+                /* Rápido al arrastrar, spring al soltar */
+                transition: isPressing
+                  ? 'transform 0.06s ease-out'
+                  : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
               }}
             >
               <div
                 className="h-full w-full rounded-[1.4rem]"
                 style={{
-                  /* Gradiente radial: casi transparente en el centro, azul-blanco en los bordes */
                   background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
                   border: '1.5px solid rgba(96,165,250,0.55)',
                   boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
+                  /* Se agranda al presionar */
+                  transform: isPressing ? 'scale(1.06)' : 'scale(1)',
+                  transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
                 }}
               />
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="relative flex">
-            {tabs.map(({ to, label, Icon, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  `flex flex-1 flex-col items-center gap-0.5 py-3 text-[10px] font-semibold transition-all duration-300 ${
-                    isActive
-                      ? 'text-blue-800 dark:text-white'
-                      : 'text-slate-500 dark:text-slate-400'
-                  }`
-                }
-                style={({ isActive }) => ({
-                  transform: isActive ? 'scale(1.08)' : 'scale(1)',
-                  transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.2s',
-                })}
-              >
-                <Icon />
-                <span>{label}</span>
-              </NavLink>
-            ))}
+          {/* Tabs — botones en lugar de links para evitar el menú de iOS */}
+          <div
+            ref={tabsRef}
+            className="relative flex"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onContextMenu={e => e.preventDefault()}
+            style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+          >
+            {tabs.map(({ to, label, Icon, end }) => {
+              const isActive = end
+                ? pathname === to
+                : pathname === to || pathname.startsWith(to + '/');
+              return (
+                <button
+                  key={to}
+                  type="button"
+                  onClick={() => navigate(to)}
+                  className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[10px] font-semibold ${
+                    isActive ? 'text-blue-800 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                  style={{
+                    transform: isActive ? 'scale(1.08)' : 'scale(1)',
+                    transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.2s',
+                    WebkitTapHighlightColor: 'transparent',
+                    background: 'none',
+                    border: 'none',
+                    outline: 'none',
+                  }}
+                >
+                  <Icon />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         </nav>
       </div>
