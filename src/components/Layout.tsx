@@ -45,23 +45,31 @@ const N = tabs.length;
 export default function Layout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const tabsRef      = useRef<HTMLDivElement>(null);
-  const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const tabsRef       = useRef<HTMLDivElement>(null);
+  const releaseTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const holdNavTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
   );
 
   const [continuousT, setContinuousT] = useState<number | null>(null);
-  // isExpanded: dedo apoyado → nav escala
-  const [isExpanded, setIsExpanded] = useState(false);
-  // isDragging: hay movimiento real → pill sin transición (sigue el dedo directo)
-  const [isDragging, setIsDragging] = useState(false);
+  const [isExpanded,  setIsExpanded]  = useState(false);
+  // isHolding: dedo sostenido >250ms o arrastrando → expansión rápida (0.12s)
+  const [isHolding,   setIsHolding]   = useState(false);
+  const [isDragging,  setIsDragging]  = useState(false);
   const isDraggingRef = useRef(false);
-  const [dragIndex,   setDragIndex] = useState<number | null>(null);
+  const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
   const navScale   = isExpanded ? 1.09 : 1;
+
+  // Tap rápido: expansión lenta y visible (0.55s). Sostenido/drag: rápida (0.12s).
+  const navTransition = isExpanded
+    ? (isHolding
+        ? 'transform 0.12s cubic-bezier(0.25,0.46,0.45,0.94)'
+        : 'transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)')
+    : 'transform 0.36s cubic-bezier(0.34,1.56,0.64,1)';
 
   const fromX = useCallback((clientX: number) => {
     if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
@@ -78,10 +86,10 @@ export default function Layout() {
     if (!el) return;
     const onMove = (e: TouchEvent) => {
       e.preventDefault();
-      // Primera vez que se detecta arrastre: quita la transición del pill
       if (!isDraggingRef.current) {
         isDraggingRef.current = true;
         setIsDragging(true);
+        setIsHolding(true); // arrastre = expansión rápida
       }
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
@@ -94,21 +102,26 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
+    clearTimeout(holdNavTimer.current);
     isDraggingRef.current = false;
     const { T, idx } = fromX(e.touches[0].clientX);
-    // isDragging=false → pill se desliza con spring hacia la posición del dedo
     setIsDragging(false);
+    setIsHolding(false);   // empieza como tap (expansión lenta)
     setIsExpanded(true);
     setContinuousT(T);
     setDragIndex(idx);
+    // después de 250ms sin soltar: es sostenido → expansión rápida
+    holdNavTimer.current = setTimeout(() => setIsHolding(true), 250);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
+    clearTimeout(holdNavTimer.current);
     isDraggingRef.current = false;
     const finalIdx = dragIndex ?? activeIndex;
     setContinuousT(finalIdx * 100);
     setIsDragging(false);
+    setIsHolding(false);
     setIsExpanded(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
@@ -140,10 +153,7 @@ export default function Layout() {
             /* barra crece hacia arriba al presionar */
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
-            /* expansión y retracción lentas y suaves */
-            transition: isExpanded
-              ? 'transform 0.40s cubic-bezier(0.25,0.46,0.45,0.94)'
-              : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+            transition: navTransition,
           }}
         >
           {/* Dark-mode overlay */}
