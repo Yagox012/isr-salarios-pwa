@@ -66,8 +66,6 @@ export default function Layout() {
   const [continuousT, setContinuousT] = useState<number | null>(null);
   const [isPressing,  setIsPressing]  = useState(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
-  // true solo durante el snap post-arrastre; false en clicks directos
-  const [useSpring,   setUseSpring]   = useState(false);
 
   /* Posición del indicador: explícita si la tenemos, sino desde activeIndex */
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
@@ -99,23 +97,25 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
-    // Detecta el tab que el usuario tocó (no el activo) para navegación correcta
-    const { T, idx } = fromX(e.touches[0].clientX);
-    setContinuousT(T);
-    setDragIndex(idx);
+    /*
+     * Guarda la posición ACTUAL del indicador como punto de partida.
+     * El dragIndex se calcula desde el tab tocado (para saber el destino).
+     * Así el spring siempre anima DESDE donde está HASTA el destino,
+     * tanto en taps directos como en arrastres.
+     */
+    const { idx } = fromX(e.touches[0].clientX);
+    setContinuousT(activeIndex * 100);   // punto de partida = posición actual
+    setDragIndex(idx);                   // destino = tab tocado
     setIsPressing(true);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
     const finalIdx = dragIndex ?? activeIndex;
-    // Activa spring SOLO para el snap post-arrastre, no para clicks
-    setUseSpring(true);
-    setContinuousT(finalIdx * 100);
-    setIsPressing(false);
+    setContinuousT(finalIdx * 100);      // destino explícito
+    setIsPressing(false);                // habilita la transición spring
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
-      setUseSpring(false);
       setContinuousT(null);
       setDragIndex(null);
     }, 500);
@@ -158,10 +158,10 @@ export default function Layout() {
               padding: '4px 5px',
               zIndex: 1,
               transform: `translateX(${indicatorT}%)`,
-              /* Spring solo al soltar arrastre; sin transición en drag ni en clicks */
-              transition: useSpring
-                ? 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)'
-                : 'none',
+              /* Sin transición mientras arrastra; spring al soltar (tap o drag) */
+              transition: isPressing
+                ? 'none'
+                : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
             }}
           >
             <div
