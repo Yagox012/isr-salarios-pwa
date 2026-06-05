@@ -99,17 +99,15 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
-    /*
-     * El indicador se QUEDA donde está (activeIndex * 100).
-     * Solo activamos isPressing (escala + forma circular).
-     * El drag real empieza con touchMove.
-     */
-    setContinuousT(activeIndex * 100);
-    setDragIndex(activeIndex);
+    // Detecta el tab que el usuario tocó (no el activo) para navegación correcta
+    const { T, idx } = fromX(e.touches[0].clientX);
+    setContinuousT(T);
+    setDragIndex(idx);
     setIsPressing(true);
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
     const finalIdx = dragIndex ?? activeIndex;
     // Activa spring SOLO para el snap post-arrastre, no para clicks
     setUseSpring(true);
