@@ -47,27 +47,19 @@ export default function Layout() {
   const navigate = useNavigate();
   const tabsRef  = useRef<HTMLDivElement>(null);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const holdTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
   );
 
-  /*
-   * Máquina de estados del indicador:
-   *
-   * continuousT = null  → posición calculada desde activeIndex (idle / post-spring)
-   * continuousT = número → posición explícita (durante drag o snap final)
-   * isPressing          → si el dedo está apoyado (controla forma y tamaño)
-   * dragIndex           → tab bajo el dedo (para navegar al soltar)
-   *
-   * La transición spring se activa solo cuando isPressing=false.
-   * Así evitamos el doble salto al soltar.
-   */
   const [continuousT, setContinuousT] = useState<number | null>(null);
-  const [isPressing,  setIsPressing]  = useState(false);
+  // isTracking: dedo apoyado → bloquea transición (el slide se controla manualmente)
+  const [isTracking,  setIsTracking]  = useState(false);
+  // isHolding: activo solo si mantiene >180ms o arrastra → escala + forma circular
+  const [isHolding,   setIsHolding]   = useState(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
-  /* Posición del indicador: explícita si la tenemos, sino desde activeIndex */
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
 
   /* Convierte clientX → { T: posición continua, idx: tab más cercano } */
@@ -86,6 +78,9 @@ export default function Layout() {
     if (!el) return;
     const onMove = (e: TouchEvent) => {
       e.preventDefault();
+      // Al mover el dedo activamos isHolding inmediatamente
+      clearTimeout(holdTimer.current);
+      setIsHolding(true);
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
       setDragIndex(idx);
@@ -97,23 +92,22 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
-    /*
-     * Guarda la posición ACTUAL del indicador como punto de partida.
-     * El dragIndex se calcula desde el tab tocado (para saber el destino).
-     * Así el spring siempre anima DESDE donde está HASTA el destino,
-     * tanto en taps directos como en arrastres.
-     */
+    clearTimeout(holdTimer.current);
     const { idx } = fromX(e.touches[0].clientX);
-    setContinuousT(activeIndex * 100);   // punto de partida = posición actual
-    setDragIndex(idx);                   // destino = tab tocado
-    setIsPressing(true);
+    setContinuousT(activeIndex * 100);
+    setDragIndex(idx);
+    setIsTracking(true);
+    // isHolding solo se activa si mantiene el dedo >180ms sin mover
+    holdTimer.current = setTimeout(() => setIsHolding(true), 180);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
+    clearTimeout(holdTimer.current);
     const finalIdx = dragIndex ?? activeIndex;
-    setContinuousT(finalIdx * 100);      // destino explícito
-    setIsPressing(false);                // habilita la transición spring
+    setContinuousT(finalIdx * 100);
+    setIsTracking(false);
+    setIsHolding(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
       setContinuousT(null);
@@ -159,7 +153,7 @@ export default function Layout() {
               zIndex: 1,
               transform: `translateX(${indicatorT}%)`,
               /* Sin transición mientras arrastra; spring al soltar (tap o drag) */
-              transition: isPressing
+              transition: isTracking
                 ? 'none'
                 : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
             }}
@@ -177,8 +171,8 @@ export default function Layout() {
                  * Pill → óvalo/círculo al presionar.
                  * transform-origin bottom: crece hacia arriba saliendo de la nav.
                  */
-                borderRadius: isPressing ? '50%' : '1.2rem',
-                transform: isPressing ? 'scale(1.35)' : 'scale(1)',
+                borderRadius: isHolding ? '50%' : '1.2rem',
+                transform: isHolding ? 'scale(1.35)' : 'scale(1)',
                 transformOrigin: 'center bottom',
                 transition: [
                   'border-radius 0.2s cubic-bezier(0.34,1.56,0.64,1)',
