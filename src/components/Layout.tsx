@@ -47,23 +47,20 @@ export default function Layout() {
   const navigate = useNavigate();
   const tabsRef      = useRef<HTMLDivElement>(null);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const holdTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
   );
 
   const [continuousT, setContinuousT] = useState<number | null>(null);
-  // isTracking: dedo apoyado → indicador sin transición + nav bump visible
+  // isTracking: dedo apoyado → indicador sin transición CSS
   const [isTracking,  setIsTracking]  = useState(false);
-  // isHolding: >180ms o arrastrando → nav más expandida
-  const [isHolding,   setIsHolding]   = useState(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
 
-  // La barra crece hacia arriba al presionar/arrastrar
-  const navScale = isHolding ? 1.09 : isTracking ? 1.045 : 1;
+  // Un solo nivel de escala: se expande al instante al tocar, vuelve con spring
+  const navScale = isTracking ? 1.09 : 1;
 
   const fromX = useCallback((clientX: number) => {
     if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
@@ -80,8 +77,6 @@ export default function Layout() {
     if (!el) return;
     const onMove = (e: TouchEvent) => {
       e.preventDefault();
-      clearTimeout(holdTimer.current);
-      setIsHolding(true);
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
       setDragIndex(idx);
@@ -93,21 +88,18 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
-    clearTimeout(holdTimer.current);
-    const { idx } = fromX(e.touches[0].clientX);
-    setContinuousT(activeIndex * 100);
+    // Indicador salta inmediatamente a la posición del dedo (sin transición, isTracking=true)
+    const { T, idx } = fromX(e.touches[0].clientX);
+    setContinuousT(T);
     setDragIndex(idx);
     setIsTracking(true);
-    holdTimer.current = setTimeout(() => setIsHolding(true), 180);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
-    clearTimeout(holdTimer.current);
     const finalIdx = dragIndex ?? activeIndex;
     setContinuousT(finalIdx * 100);
     setIsTracking(false);
-    setIsHolding(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
       setContinuousT(null);
@@ -138,10 +130,10 @@ export default function Layout() {
             /* barra crece hacia arriba al presionar */
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
-            /* expansión rápida, retracción con spring */
+            /* expansión instantánea al tocar, retracción con spring */
             transition: isTracking
-              ? 'transform 0.13s cubic-bezier(0.34,1.56,0.64,1)'
-              : 'transform 0.30s cubic-bezier(0.34,1.56,0.64,1)',
+              ? 'transform 0.10s ease-out'
+              : 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
           }}
         >
           {/* Dark-mode overlay */}
