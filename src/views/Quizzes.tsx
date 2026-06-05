@@ -10,7 +10,7 @@ export default function Quizzes() {
     const reactivos = unidad.temas.flatMap((t) => t.quiz);
     return (
       <div key={unidad.id} className="section-enter text-slate-800 dark:text-slate-100">
-        <header className="bg-blue-900 px-5 pb-5 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
+        <header className="bg-blue-900 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
           <button type="button" onClick={() => setUnidadActiva(null)} className="text-sm text-blue-300">‹ Quizzes</button>
           <h1 className="mt-1 text-xl font-bold leading-tight">Examen · Unidad {unidad.numero}</h1>
           <p className="mt-1 text-xs text-blue-200">{reactivos.length} reactivos</p>
@@ -24,7 +24,7 @@ export default function Quizzes() {
 
   return (
     <div className="text-slate-800 dark:text-slate-100">
-      <header className="bg-blue-900 px-5 pb-6 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
+      <header className="bg-blue-900 px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
         <p className="text-xs font-medium uppercase tracking-widest text-blue-300">Evaluación</p>
         <h1 className="mt-1 text-2xl font-bold leading-tight">Quizzes</h1>
         <p className="mt-1 text-sm text-blue-200">Examen por unidad con calificación.</p>
