@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { unidades } from '../content/units';
 import { useProgress, type EstadoTema } from '../hooks/useProgress';
+import { SpringCard, glassCard } from '../components/SpringCard';
 
 const semaforo: Record<EstadoTema, { color: string; etiqueta: string }> = {
   completado: { color: 'bg-emerald-500', etiqueta: 'Completado' },
-  pendiente: { color: 'bg-amber-400', etiqueta: 'Pendiente' },
-  no_iniciado: { color: 'bg-rose-400', etiqueta: 'No iniciado' },
+  pendiente:  { color: 'bg-amber-400',   etiqueta: 'Pendiente'  },
+  no_iniciado:{ color: 'bg-rose-400',    etiqueta: 'No iniciado'},
 };
 
 export default function Unidades() {
@@ -33,14 +34,15 @@ export default function Unidades() {
                 const s = semaforo[estado];
                 return (
                   <li key={t.id}>
-                    <Link
+                    <SpringCard
+                      as={Link}
                       to={`/unidades/${u.id}/${t.id}`}
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900"
+                      className={`flex items-center gap-3 ${glassCard} !p-4`}
                     >
                       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${s.color}`} aria-hidden />
                       <span className="flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">{t.titulo}</span>
                       <span className="text-slate-300 dark:text-slate-600">›</span>
-                    </Link>
+                    </SpringCard>
                   </li>
                 );
               })}
