@@ -31,7 +31,8 @@ export default function Quiz({ reactivos, onFinish }: QuizProps) {
           return (
             <li
               key={r.id}
-              className="rounded-2xl border border-white/75 bg-white/72 p-4 backdrop-blur-xl shadow-[0_2px_20px_rgba(0,0,0,0.07),0_1px_0_rgba(255,255,255,0.88)_inset] dark:border-slate-700/40 dark:bg-slate-900/65"
+              className="spring-enter rounded-2xl border border-white/75 bg-white/72 p-4 backdrop-blur-xl shadow-[0_2px_20px_rgba(0,0,0,0.07),0_1px_0_rgba(255,255,255,0.88)_inset] dark:border-slate-700/40 dark:bg-slate-900/65"
+              style={{ animationDelay: `${i * 0.07}s` }}
             >
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {i + 1}. {r.pregunta}

@@ -38,7 +38,7 @@ export default function Quizzes() {
         <p className="mt-1 text-sm text-blue-200">Examen por unidad con calificación.</p>
       </header>
       <main className="mx-auto max-w-md space-y-3 px-5 py-6">
-        {unidades.map((u) => {
+        {unidades.map((u, i) => {
           const numReactivos = u.temas.reduce((acc, t) => acc + t.quiz.length, 0);
           return (
             <SpringCard
@@ -46,7 +46,8 @@ export default function Quizzes() {
               as="button"
               type="button"
               onClick={() => setUnidadActiva(u.id)}
-              className={`flex w-full items-center gap-3 text-left ${glassCard} !p-4`}
+              className={`spring-enter flex w-full items-center gap-3 text-left ${glassCard} !p-4`}
+              style={{ animationDelay: `${i * 0.07}s` }}
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                 U{u.numero}

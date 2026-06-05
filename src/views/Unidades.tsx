@@ -4,9 +4,9 @@ import { useProgress, type EstadoTema } from '../hooks/useProgress';
 import { SpringCard, glassCard } from '../components/SpringCard';
 
 const semaforo: Record<EstadoTema, { color: string; etiqueta: string }> = {
-  completado: { color: 'bg-emerald-500', etiqueta: 'Completado' },
-  pendiente:  { color: 'bg-amber-400',   etiqueta: 'Pendiente'  },
-  no_iniciado:{ color: 'bg-rose-400',    etiqueta: 'No iniciado'},
+  completado:  { color: 'bg-emerald-500', etiqueta: 'Completado'  },
+  pendiente:   { color: 'bg-amber-400',   etiqueta: 'Pendiente'   },
+  no_iniciado: { color: 'bg-rose-400',    etiqueta: 'No iniciado' },
 };
 
 export default function Unidades() {
@@ -20,8 +20,12 @@ export default function Unidades() {
       </header>
 
       <main className="mx-auto max-w-md space-y-6 px-5 py-6">
-        {unidades.map((u) => (
-          <section key={u.id}>
+        {unidades.map((u, ui) => (
+          <section
+            key={u.id}
+            className="spring-enter"
+            style={{ animationDelay: `${ui * 0.07}s` }}
+          >
             <div className="mb-2 flex items-baseline justify-between">
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Unidad {u.numero}</h2>
               <span className="text-xs text-slate-400 dark:text-slate-500">{u.horasTeoricas} h</span>
@@ -29,11 +33,10 @@ export default function Unidades() {
             <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">{u.titulo}</p>
 
             <ul className="space-y-2">
-              {u.temas.map((t) => {
-                const estado = estadoTema(t.id);
-                const s = semaforo[estado];
+              {u.temas.map((t, ti) => {
+                const s = semaforo[estadoTema(t.id)];
                 return (
-                  <li key={t.id}>
+                  <li key={t.id} className="spring-enter" style={{ animationDelay: `${ui * 0.07 + ti * 0.05 + 0.05}s` }}>
                     <SpringCard
                       as={Link}
                       to={`/unidades/${u.id}/${t.id}`}
