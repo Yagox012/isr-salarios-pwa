@@ -64,8 +64,8 @@ export default function IsrMensualCalculator() {
               {resultado.pasos.map((paso, i) => (
                 <SpringCard
                   key={i}
-                  className={`${glassCard} !p-4`}
-                  style={{ animationDelay: `${i * 0.04}s` }}
+                  className={`spring-enter ${glassCard} !p-4`}
+                  style={{ animationDelay: `${i * 0.05}s` }}
                 >
                   <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">{paso.etiqueta}</p>
                   <p className="mt-1 text-sm tabular-nums text-slate-600 dark:text-slate-300">{paso.detalle}</p>

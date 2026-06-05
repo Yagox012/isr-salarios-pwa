@@ -67,17 +67,25 @@ export default function TemaDetalle() {
 
       <main className="mx-auto max-w-md px-5 py-6">
         <div key={seccion} className="section-enter">
+
           {seccion === 'teoria' && (
             <div className="space-y-4">
               {tema.teoria.map((parrafo, i) => (
-                <p key={i} className="text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">{parrafo}</p>
+                <p
+                  key={i}
+                  className="spring-enter text-[15px] leading-relaxed text-slate-700 dark:text-slate-300"
+                  style={{ animationDelay: `${i * 0.06}s` }}
+                >
+                  {parrafo}
+                </p>
               ))}
               <SpringCard
                 as="button"
                 type="button"
                 onClick={() => marcarTeoriaLeida(tema.id)}
                 disabled={prog.teoriaLeida}
-                className="mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
+                className="spring-enter mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
+                style={{ animationDelay: `${tema.teoria.length * 0.06}s` }}
               >
                 {prog.teoriaLeida ? '✓ Teoría leída' : 'Marcar teoría como leída'}
               </SpringCard>
@@ -86,15 +94,18 @@ export default function TemaDetalle() {
 
           {seccion === 'flashcards' && (
             <div className="space-y-3">
-              {tema.flashcards.map((c) => (
-                <Flashcard key={c.id} card={c} />
+              {tema.flashcards.map((c, i) => (
+                <div key={c.id} className="spring-enter" style={{ animationDelay: `${i * 0.07}s` }}>
+                  <Flashcard card={c} />
+                </div>
               ))}
               <SpringCard
                 as="button"
                 type="button"
                 onClick={() => marcarFlashcardsRepasadas(tema.id)}
                 disabled={prog.flashcardsRepasadas}
-                className="mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
+                className="spring-enter mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
+                style={{ animationDelay: `${tema.flashcards.length * 0.07}s` }}
               >
                 {prog.flashcardsRepasadas ? '✓ Flashcards repasadas' : 'Marcar flashcards como repasadas'}
               </SpringCard>
@@ -104,6 +115,7 @@ export default function TemaDetalle() {
           {seccion === 'quiz' && (
             <Quiz reactivos={tema.quiz} onFinish={(pct) => registrarQuiz(tema.id, pct)} />
           )}
+
         </div>
       </main>
     </div>
