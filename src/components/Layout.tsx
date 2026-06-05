@@ -63,7 +63,7 @@ export default function Layout() {
 
   // Pop instantáneo al expandir (~80ms), spring con rebote al retraer (~420ms)
   const navTransition = isExpanded
-    ? 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)'
+    ? 'transform 0.18s ease-out'
     : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)';
 
   const fromX = useCallback((clientX: number) => {
