@@ -45,7 +45,7 @@ const N = tabs.length;
 export default function Layout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const tabsRef  = useRef<HTMLDivElement>(null);
+  const tabsRef      = useRef<HTMLDivElement>(null);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const holdTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -54,15 +54,17 @@ export default function Layout() {
   );
 
   const [continuousT, setContinuousT] = useState<number | null>(null);
-  // isTracking: dedo apoyado → bloquea transición (el slide se controla manualmente)
+  // isTracking: dedo apoyado → indicador sin transición + nav bump visible
   const [isTracking,  setIsTracking]  = useState(false);
-  // isHolding: activo solo si mantiene >180ms o arrastra → escala + forma circular
+  // isHolding: >180ms o arrastrando → nav más expandida
   const [isHolding,   setIsHolding]   = useState(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
 
-  /* Convierte clientX → { T: posición continua, idx: tab más cercano } */
+  // La barra crece hacia arriba al presionar/arrastrar
+  const navScale = isHolding ? 1.09 : isTracking ? 1.045 : 1;
+
   const fromX = useCallback((clientX: number) => {
     if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
     const { left, width } = tabsRef.current.getBoundingClientRect();
@@ -78,7 +80,6 @@ export default function Layout() {
     if (!el) return;
     const onMove = (e: TouchEvent) => {
       e.preventDefault();
-      // Al mover el dedo activamos isHolding inmediatamente
       clearTimeout(holdTimer.current);
       setIsHolding(true);
       const { T, idx } = fromX(e.touches[0].clientX);
@@ -97,7 +98,6 @@ export default function Layout() {
     setContinuousT(activeIndex * 100);
     setDragIndex(idx);
     setIsTracking(true);
-    // isHolding solo se activa si mantiene el dedo >180ms sin mover
     holdTimer.current = setTimeout(() => setIsHolding(true), 180);
   };
 
@@ -134,17 +134,23 @@ export default function Layout() {
             WebkitBackdropFilter: 'blur(32px) saturate(1.8)',
             border: '1px solid rgba(255,255,255,0.55)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset',
-            /* overflow visible para que el indicador salga por arriba al presionar */
             overflow: 'visible',
+            /* barra crece hacia arriba al presionar */
+            transform: `scale(${navScale})`,
+            transformOrigin: 'center bottom',
+            /* expansión rápida, retracción con spring */
+            transition: isTracking
+              ? 'transform 0.13s cubic-bezier(0.34,1.56,0.64,1)'
+              : 'transform 0.30s cubic-bezier(0.34,1.56,0.64,1)',
           }}
         >
-          {/* Dark-mode overlay (clip a rounded corners manualmente) */}
+          {/* Dark-mode overlay */}
           <div
             className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
             style={{ background: 'rgba(15,23,42,0.45)' }}
           />
 
-          {/* Indicador — posición continua, forma cambia al presionar */}
+          {/* Indicador — pill rectangular siempre, sin cambio de forma */}
           <div
             className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
             style={{
@@ -152,7 +158,6 @@ export default function Layout() {
               padding: '4px 5px',
               zIndex: 1,
               transform: `translateX(${indicatorT}%)`,
-              /* Sin transición mientras arrastra; spring al soltar (tap o drag) */
               transition: isTracking
                 ? 'none'
                 : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
@@ -167,17 +172,7 @@ export default function Layout() {
                 boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                /*
-                 * Pill → óvalo/círculo al presionar.
-                 * transform-origin bottom: crece hacia arriba saliendo de la nav.
-                 */
-                borderRadius: isHolding ? '50%' : '1.2rem',
-                transform: isHolding ? 'scale(1.35)' : 'scale(1)',
-                transformOrigin: 'center bottom',
-                transition: [
-                  'border-radius 0.2s cubic-bezier(0.34,1.56,0.64,1)',
-                  'transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
-                ].join(', '),
+                borderRadius: '1.2rem',
               }}
             />
           </div>
@@ -205,12 +200,12 @@ export default function Layout() {
                   key={to}
                   type="button"
                   onClick={() => navigate(to)}
-                  className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[10px] font-semibold ${
-                    isActive ? 'text-blue-800 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                  className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[10px] font-semibold transition-colors duration-150 ${
+                    isActive
+                      ? 'text-slate-900 dark:text-white'
+                      : 'text-slate-500 dark:text-slate-300'
                   }`}
                   style={{
-                    transform: isActive ? 'scale(1.08)' : 'scale(1)',
-                    transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.2s',
                     WebkitTapHighlightColor: 'transparent',
                     background: 'none',
                     border: 'none',
