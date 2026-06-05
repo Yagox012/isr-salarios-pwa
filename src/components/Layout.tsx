@@ -1,7 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-/* --- Íconos (SVG en línea, estilo Feather) --- */
+/* --- Íconos --- */
 const base = 'h-[22px] w-[22px]';
 const IconInicio = () => (
   <svg className={base} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -40,53 +40,74 @@ const tabs = [
   { to: '/ajustes',      label: 'Ajustes',  Icon: IconAjustes,  end: false },
 ];
 
+const N = tabs.length; // 5
+
 export default function Layout() {
   const { pathname } = useLocation();
-  const navigate   = useNavigate();
-  const tabsRef    = useRef<HTMLDivElement>(null);
+  const navigate  = useNavigate();
+  const navRef    = useRef<HTMLElement>(null);
+  const tabsRef   = useRef<HTMLDivElement>(null);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
   );
 
-  /* ── Estado de arrastre ── */
-  const [dragIndex,   setDragIndex]   = useState<number | null>(null);
+  /*
+   * continuousT: posición del indicador expresada como porcentaje de su
+   * propio ancho (20 % de nav). Valor normal = activeIndex * 100.
+   * Durante el arrastre = posición exacta del dedo convertida a este sistema.
+   */
+  const [continuousT, setContinuousT] = useState<number | null>(null);
   const [isPressing,  setIsPressing]  = useState(false);
+  const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
-  /* Índice que se muestra en el indicador: drag en curso o tab activo */
-  const displayIndex = isPressing && dragIndex !== null ? dragIndex : activeIndex;
-
-  /* Calcula el índice de tab a partir de la coordenada X del toque */
-  const indexFromX = useCallback((clientX: number): number => {
-    if (!tabsRef.current) return activeIndex;
-    const { left, width } = tabsRef.current.getBoundingClientRect();
-    const ratio = (clientX - left) / width;
-    return Math.max(0, Math.min(tabs.length - 1, Math.floor(ratio * tabs.length)));
+  /* Convierte clientX → { T, idx } */
+  const fromX = useCallback((clientX: number) => {
+    const el = navRef.current ?? tabsRef.current;
+    if (!el) return { T: activeIndex * 100, idx: activeIndex };
+    const { left, width } = el.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - left) / width));
+    // Centro del indicador en ratio → T en % de ancho propio del indicador
+    // Tab N centro = (N + 0.5) / totalTabs  →  T = N * 100
+    // Fórmula continua: T = (ratio * N - 0.5) * 100, clamped [0, (N-1)*100]
+    const T   = Math.max(0, Math.min((N - 1) * 100, (ratio * N - 0.5) * 100));
+    const idx = Math.max(0, Math.min(N - 1, Math.floor(ratio * N)));
+    return { T, idx };
   }, [activeIndex]);
 
-  /* touchmove debe ser passive:false para poder llamar preventDefault */
+  /* touchmove no-passive para poder preventDefault (evita scroll) */
   useEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
     const onMove = (e: TouchEvent) => {
       e.preventDefault();
-      setDragIndex(indexFromX(e.touches[0].clientX));
+      const { T, idx } = fromX(e.touches[0].clientX);
+      setContinuousT(T);
+      setDragIndex(idx);
     };
     el.addEventListener('touchmove', onMove, { passive: false });
     return () => el.removeEventListener('touchmove', onMove);
-  }, [indexFromX]);
+  }, [fromX]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
+    const { T, idx } = fromX(e.touches[0].clientX);
     setIsPressing(true);
-    setDragIndex(indexFromX(e.touches[0].clientX));
+    setContinuousT(T);
+    setDragIndex(idx);
   };
 
   const handleTouchEnd = () => {
     if (dragIndex !== null) navigate(tabs[dragIndex].to);
     setIsPressing(false);
+    setContinuousT(null);
     setDragIndex(null);
   };
+
+  /* Posición del indicador: continua durante drag, discreta en reposo */
+  const indicatorT = isPressing && continuousT !== null
+    ? continuousT
+    : activeIndex * 100;
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
@@ -99,8 +120,10 @@ export default function Layout() {
         className="fixed inset-x-0 bottom-0 z-10 flex justify-center"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
+        {/* overflow visible para que el indicador pueda salirse al presionar */}
         <nav
-          className="relative mx-4 w-full max-w-md overflow-hidden rounded-[2rem]"
+          ref={navRef}
+          className="relative mx-4 w-full max-w-md rounded-[2rem]"
           style={{
             background: 'rgba(255,255,255,0.38)',
             backdropFilter: 'blur(32px) saturate(1.8)',
@@ -111,48 +134,53 @@ export default function Layout() {
         >
           {/* Dark-mode overlay */}
           <div
-            className="pointer-events-none absolute inset-0 hidden dark:block rounded-[2rem]"
+            className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
             style={{ background: 'rgba(15,23,42,0.45)' }}
           />
 
-          {/* Indicador deslizante — pill que sigue al dedo */}
-          {displayIndex >= 0 && (
+          {/* Indicador pill — sigue el dedo en tiempo real */}
+          <div
+            className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
+            style={{
+              width: `${100 / N}%`,
+              padding: '5px 6px',
+              /* Sin transición mientras arrastra; spring al soltar */
+              transition: isPressing
+                ? 'none'
+                : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+              transform: `translateX(${indicatorT}%)`,
+              /* z-index encima del dark overlay pero debajo del texto */
+              zIndex: 1,
+            }}
+          >
             <div
-              className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
+              className="h-full w-full rounded-[1.4rem]"
               style={{
-                width: '20%',
-                padding: '5px 6px',
-                transform: `translateX(${displayIndex * 100}%)`,
-                /* Rápido al arrastrar, spring al soltar */
-                transition: isPressing
-                  ? 'transform 0.06s ease-out'
-                  : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+                background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
+                border: '1.5px solid rgba(96,165,250,0.55)',
+                boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                /* Crece visiblemente al presionar, puede salirse de la nav */
+                transform: isPressing ? 'scale(1.28)' : 'scale(1)',
+                transition: 'transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
               }}
-            >
-              <div
-                className="h-full w-full rounded-[1.4rem]"
-                style={{
-                  background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
-                  border: '1.5px solid rgba(96,165,250,0.55)',
-                  boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  /* Se agranda al presionar */
-                  transform: isPressing ? 'scale(1.06)' : 'scale(1)',
-                  transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
-                }}
-              />
-            </div>
-          )}
+            />
+          </div>
 
-          {/* Tabs — botones en lugar de links para evitar el menú de iOS */}
+          {/* Tabs */}
           <div
             ref={tabsRef}
             className="relative flex"
+            style={{
+              zIndex: 2,
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+            }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onContextMenu={e => e.preventDefault()}
-            style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
           >
             {tabs.map(({ to, label, Icon, end }) => {
               const isActive = end
