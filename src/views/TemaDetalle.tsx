@@ -36,7 +36,7 @@ export default function TemaDetalle() {
 
   return (
     <div className="text-slate-800 dark:text-slate-100">
-      <header className="bg-blue-900 px-5 pb-5 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
+      <header className="bg-blue-900 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
         <Link to="/unidades" className="text-sm text-blue-300">‹ Unidad {unidad.numero}</Link>
         <h1 className="mt-1 text-xl font-bold leading-tight">{tema.titulo}</h1>
         <p className="mt-1 text-xs text-blue-200">{tema.articulosReferencia.join(' · ')}</p>

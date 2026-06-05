@@ -8,7 +8,7 @@ interface PlaceholderProps {
 export default function Placeholder({ titulo, subtitulo, mensaje }: PlaceholderProps) {
   return (
     <div className="text-slate-800">
-      <header className="bg-blue-900 px-5 pb-6 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
+      <header className="bg-blue-900 px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
         <p className="text-xs font-medium uppercase tracking-widest text-blue-300">{subtitulo}</p>
         <h1 className="mt-1 text-2xl font-bold leading-tight">{titulo}</h1>
       </header>
