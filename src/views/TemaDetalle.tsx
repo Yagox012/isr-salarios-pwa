@@ -62,41 +62,43 @@ export default function TemaDetalle() {
       </div>
 
       <main className="mx-auto max-w-md px-5 py-6">
-        {seccion === 'teoria' && (
-          <div className="space-y-4">
-            {tema.teoria.map((parrafo, i) => (
-              <p key={i} className="text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">{parrafo}</p>
-            ))}
-            <button
-              type="button"
-              onClick={() => marcarTeoriaLeida(tema.id)}
-              disabled={prog.teoriaLeida}
-              className="mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
-            >
-              {prog.teoriaLeida ? '✓ Teoría leída' : 'Marcar teoría como leída'}
-            </button>
-          </div>
-        )}
+        <div key={seccion} className="section-enter">
+          {seccion === 'teoria' && (
+            <div className="space-y-4">
+              {tema.teoria.map((parrafo, i) => (
+                <p key={i} className="text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">{parrafo}</p>
+              ))}
+              <button
+                type="button"
+                onClick={() => marcarTeoriaLeida(tema.id)}
+                disabled={prog.teoriaLeida}
+                className="mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
+              >
+                {prog.teoriaLeida ? '✓ Teoría leída' : 'Marcar teoría como leída'}
+              </button>
+            </div>
+          )}
 
-        {seccion === 'flashcards' && (
-          <div className="space-y-3">
-            {tema.flashcards.map((c) => (
-              <Flashcard key={c.id} card={c} />
-            ))}
-            <button
-              type="button"
-              onClick={() => marcarFlashcardsRepasadas(tema.id)}
-              disabled={prog.flashcardsRepasadas}
-              className="mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
-            >
-              {prog.flashcardsRepasadas ? '✓ Flashcards repasadas' : 'Marcar flashcards como repasadas'}
-            </button>
-          </div>
-        )}
+          {seccion === 'flashcards' && (
+            <div className="space-y-3">
+              {tema.flashcards.map((c) => (
+                <Flashcard key={c.id} card={c} />
+              ))}
+              <button
+                type="button"
+                onClick={() => marcarFlashcardsRepasadas(tema.id)}
+                disabled={prog.flashcardsRepasadas}
+                className="mt-2 w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white disabled:bg-emerald-600 disabled:opacity-100"
+              >
+                {prog.flashcardsRepasadas ? '✓ Flashcards repasadas' : 'Marcar flashcards como repasadas'}
+              </button>
+            </div>
+          )}
 
-        {seccion === 'quiz' && (
-          <Quiz reactivos={tema.quiz} onFinish={(pct) => registrarQuiz(tema.id, pct)} />
-        )}
+          {seccion === 'quiz' && (
+            <Quiz reactivos={tema.quiz} onFinish={(pct) => registrarQuiz(tema.id, pct)} />
+          )}
+        </div>
       </main>
     </div>
   );

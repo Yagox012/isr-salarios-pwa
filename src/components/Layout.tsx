@@ -42,11 +42,17 @@ const tabs = [
 export default function Layout() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <main className="pb-[calc(env(safe-area-inset-bottom)+5rem)]">
+      <main
+        className="pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 5rem)' }}
+      >
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900/95">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         <div className="mx-auto flex max-w-md">
           {tabs.map(({ to, label, Icon, end }) => (
             <NavLink
@@ -54,7 +60,7 @@ export default function Layout() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${
+                `flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors duration-200 ${
                   isActive
                     ? 'text-blue-700 dark:text-blue-400'
                     : 'text-slate-400 dark:text-slate-500'
