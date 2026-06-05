@@ -45,9 +45,8 @@ const N = tabs.length;
 export default function Layout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const tabsRef       = useRef<HTMLDivElement>(null);
-  const releaseTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const holdNavTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const tabsRef      = useRef<HTMLDivElement>(null);
+  const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
@@ -55,21 +54,17 @@ export default function Layout() {
 
   const [continuousT, setContinuousT] = useState<number | null>(null);
   const [isExpanded,  setIsExpanded]  = useState(false);
-  // isHolding: dedo sostenido >250ms o arrastrando → expansión rápida (0.12s)
-  const [isHolding,   setIsHolding]   = useState(false);
   const [isDragging,  setIsDragging]  = useState(false);
   const isDraggingRef = useRef(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
-  const navScale   = isExpanded ? 1.09 : 1;
+  const navScale   = isExpanded ? 1.08 : 1;
 
-  // Tap rápido: expansión lenta y visible (0.55s). Sostenido/drag: rápida (0.12s).
+  // Pop instantáneo al expandir (~80ms), spring con rebote al retraer (~420ms)
   const navTransition = isExpanded
-    ? (isHolding
-        ? 'transform 0.12s cubic-bezier(0.25,0.46,0.45,0.94)'
-        : 'transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)')
-    : 'transform 0.36s cubic-bezier(0.34,1.56,0.64,1)';
+    ? 'transform 0.08s ease-out'
+    : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)';
 
   const fromX = useCallback((clientX: number) => {
     if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
@@ -89,7 +84,6 @@ export default function Layout() {
       if (!isDraggingRef.current) {
         isDraggingRef.current = true;
         setIsDragging(true);
-        setIsHolding(true); // arrastre = expansión rápida
       }
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
@@ -102,26 +96,20 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
-    clearTimeout(holdNavTimer.current);
     isDraggingRef.current = false;
     const { T, idx } = fromX(e.touches[0].clientX);
     setIsDragging(false);
-    setIsHolding(false);   // empieza como tap (expansión lenta)
     setIsExpanded(true);
     setContinuousT(T);
     setDragIndex(idx);
-    // después de 250ms sin soltar: es sostenido → expansión rápida
-    holdNavTimer.current = setTimeout(() => setIsHolding(true), 250);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
-    clearTimeout(holdNavTimer.current);
     isDraggingRef.current = false;
     const finalIdx = dragIndex ?? activeIndex;
     setContinuousT(finalIdx * 100);
     setIsDragging(false);
-    setIsHolding(false);
     setIsExpanded(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
