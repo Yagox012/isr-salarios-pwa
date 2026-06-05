@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { unidades } from '../content/units';
 import Quiz from '../components/Quiz';
+import { SpringCard, glassCard } from '../components/SpringCard';
 
 export default function Quizzes() {
   const [unidadActiva, setUnidadActiva] = useState<string | null>(null);
@@ -11,7 +12,14 @@ export default function Quizzes() {
     return (
       <div key={unidad.id} className="section-enter text-slate-800 dark:text-slate-100">
         <header className="bg-blue-900 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
-          <button type="button" onClick={() => setUnidadActiva(null)} className="text-sm text-blue-300">‹ Quizzes</button>
+          <SpringCard
+            as="button"
+            type="button"
+            onClick={() => setUnidadActiva(null)}
+            className="text-sm text-blue-300"
+          >
+            ‹ Quizzes
+          </SpringCard>
           <h1 className="mt-1 text-xl font-bold leading-tight">Examen · Unidad {unidad.numero}</h1>
           <p className="mt-1 text-xs text-blue-200">{reactivos.length} reactivos</p>
         </header>
@@ -33,11 +41,12 @@ export default function Quizzes() {
         {unidades.map((u) => {
           const numReactivos = u.temas.reduce((acc, t) => acc + t.quiz.length, 0);
           return (
-            <button
+            <SpringCard
               key={u.id}
+              as="button"
               type="button"
               onClick={() => setUnidadActiva(u.id)}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900"
+              className={`flex w-full items-center gap-3 text-left ${glassCard} !p-4`}
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                 U{u.numero}
@@ -47,7 +56,7 @@ export default function Quizzes() {
                 <span className="block text-xs text-slate-400 dark:text-slate-500">{numReactivos} reactivos</span>
               </span>
               <span className="text-slate-300 dark:text-slate-600">›</span>
-            </button>
+            </SpringCard>
           );
         })}
       </main>

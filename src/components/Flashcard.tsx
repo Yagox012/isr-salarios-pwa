@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import type { Flashcard as FlashcardType } from '../content/units';
+import { SpringCard } from './SpringCard';
 
 export default function Flashcard({ card }: { card: FlashcardType }) {
   const [volteada, setVolteada] = useState(false);
 
   return (
-    <button
+    <SpringCard
+      as="button"
       type="button"
       onClick={() => setVolteada((v) => !v)}
-      className="flex w-full flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900"
+      className="flex w-full flex-col rounded-2xl border border-white/75 bg-white/72 p-5 text-left backdrop-blur-xl shadow-[0_2px_20px_rgba(0,0,0,0.07),0_1px_0_rgba(255,255,255,0.88)_inset] dark:border-slate-700/40 dark:bg-slate-900/65 dark:shadow-[0_2px_20px_rgba(0,0,0,0.28)]"
     >
       <span
         className={`text-xs font-semibold uppercase tracking-wider ${
@@ -21,6 +23,6 @@ export default function Flashcard({ card }: { card: FlashcardType }) {
         {volteada ? card.respuesta : card.pregunta}
       </span>
       <span className="mt-3 text-xs text-slate-400 dark:text-slate-500">Toca para voltear</span>
-    </button>
+    </SpringCard>
   );
 }

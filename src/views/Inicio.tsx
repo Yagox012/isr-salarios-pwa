@@ -1,49 +1,7 @@
-import { useState, type ComponentPropsWithoutRef, type ElementType } from 'react';
 import { Link } from 'react-router-dom';
 import { unidades } from '../content/units';
 import { useProgress } from '../hooks/useProgress';
-
-/* ──────────────────────────────────────────
-   SpringCard — física de resorte al presionar
-   Comprime rápido (0.08s) → rebote al soltar (cubic-bezier con overshoot)
-────────────────────────────────────────── */
-function SpringCard<T extends ElementType = 'div'>({
-  as,
-  children,
-  style,
-  ...props
-}: { as?: T; children: React.ReactNode; style?: React.CSSProperties }
-  & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'style'>) {
-  const [pressed, setPressed] = useState(false);
-  const Tag = (as ?? 'div') as ElementType;
-  return (
-    <Tag
-      {...props}
-      style={{
-        ...style,
-        transform: pressed ? 'scale(0.964)' : 'scale(1)',
-        transition: pressed
-          ? 'transform 0.08s ease-out'
-          : 'transform 0.52s cubic-bezier(0.34,1.56,0.64,1)',
-      }}
-      onTouchStart={() => setPressed(true)}
-      onTouchEnd={() => setPressed(false)}
-      onTouchCancel={() => setPressed(false)}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
-    >
-      {children}
-    </Tag>
-  );
-}
-
-/* Estilos reutilizables para tarjetas Liquid Glass */
-const glassCard =
-  'rounded-2xl border border-white/75 bg-white/72 p-5 backdrop-blur-xl ' +
-  'shadow-[0_2px_20px_rgba(0,0,0,0.07),0_1px_0_rgba(255,255,255,0.88)_inset] ' +
-  'dark:border-slate-700/40 dark:bg-slate-900/65 ' +
-  'dark:shadow-[0_2px_20px_rgba(0,0,0,0.28),0_1px_0_rgba(255,255,255,0.04)_inset]';
+import { SpringCard, glassCard } from '../components/SpringCard';
 
 export default function Inicio() {
   const { estadoTema } = useProgress();

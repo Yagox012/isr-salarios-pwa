@@ -63,7 +63,7 @@ export default function Layout() {
 
   // Pop instantáneo al expandir (~80ms), spring con rebote al retraer (~420ms)
   const navTransition = isExpanded
-    ? 'transform 0.08s ease-out'
+    ? 'transform 0.12s ease-out'
     : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)';
 
   const fromX = useCallback((clientX: number) => {
@@ -130,7 +130,7 @@ export default function Layout() {
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
         <nav
-          className="relative mx-4 w-full max-w-md rounded-[2rem]"
+          className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
             background: 'rgba(255,255,255,0.38)',
             backdropFilter: 'blur(32px) saturate(1.8)',
