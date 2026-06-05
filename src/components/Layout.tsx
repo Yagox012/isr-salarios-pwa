@@ -46,7 +46,7 @@ export default function Layout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const tabsRef  = useRef<HTMLDivElement>(null);
-  const releaseTimer = useRef<ReturnType<typeof setTimeout>>();
+  const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
