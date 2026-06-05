@@ -53,14 +53,15 @@ export default function Layout() {
   );
 
   const [continuousT, setContinuousT] = useState<number | null>(null);
-  // isTracking: dedo apoyado → indicador sin transición CSS
-  const [isTracking,  setIsTracking]  = useState(false);
-  const [dragIndex,   setDragIndex]   = useState<number | null>(null);
+  // isExpanded: dedo apoyado → nav escala
+  const [isExpanded, setIsExpanded] = useState(false);
+  // isDragging: hay movimiento real → pill sin transición (sigue el dedo directo)
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
+  const [dragIndex,   setDragIndex] = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
-
-  // Un solo nivel de escala: se expande al instante al tocar, vuelve con spring
-  const navScale = isTracking ? 1.09 : 1;
+  const navScale   = isExpanded ? 1.09 : 1;
 
   const fromX = useCallback((clientX: number) => {
     if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
@@ -71,12 +72,17 @@ export default function Layout() {
     return { T, idx };
   }, [activeIndex]);
 
-  /* touchmove no-passive para preventDefault (bloquea scroll) */
+  /* touchmove no-passive para preventDefault */
   useEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
     const onMove = (e: TouchEvent) => {
       e.preventDefault();
+      // Primera vez que se detecta arrastre: quita la transición del pill
+      if (!isDraggingRef.current) {
+        isDraggingRef.current = true;
+        setIsDragging(true);
+      }
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
       setDragIndex(idx);
@@ -88,18 +94,22 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
-    // Indicador salta inmediatamente a la posición del dedo (sin transición, isTracking=true)
+    isDraggingRef.current = false;
     const { T, idx } = fromX(e.touches[0].clientX);
+    // isDragging=false → pill se desliza con spring hacia la posición del dedo
+    setIsDragging(false);
+    setIsExpanded(true);
     setContinuousT(T);
     setDragIndex(idx);
-    setIsTracking(true);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
+    isDraggingRef.current = false;
     const finalIdx = dragIndex ?? activeIndex;
     setContinuousT(finalIdx * 100);
-    setIsTracking(false);
+    setIsDragging(false);
+    setIsExpanded(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
       setContinuousT(null);
@@ -130,10 +140,10 @@ export default function Layout() {
             /* barra crece hacia arriba al presionar */
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
-            /* expansión instantánea al tocar, retracción con spring */
-            transition: isTracking
-              ? 'transform 0.10s ease-out'
-              : 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
+            /* expansión rápida al tocar, retracción con spring (20% más lento que antes) */
+            transition: isExpanded
+              ? 'transform 0.12s ease-out'
+              : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
           }}
         >
           {/* Dark-mode overlay */}
@@ -150,7 +160,7 @@ export default function Layout() {
               padding: '4px 5px',
               zIndex: 1,
               transform: `translateX(${indicatorT}%)`,
-              transition: isTracking
+              transition: isDragging
                 ? 'none'
                 : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
             }}
