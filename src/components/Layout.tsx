@@ -138,6 +138,7 @@ export default function Layout() {
             border: '1px solid rgba(255,255,255,0.55)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset',
             overflow: 'visible',
+            willChange: 'transform',
             /* barra crece hacia arriba al presionar */
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
