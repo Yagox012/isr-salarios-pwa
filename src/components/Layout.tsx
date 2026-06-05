@@ -140,10 +140,10 @@ export default function Layout() {
             /* barra crece hacia arriba al presionar */
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
-            /* expansión rápida al tocar, retracción con spring (20% más lento que antes) */
+            /* expansión y retracción lentas y suaves */
             transition: isExpanded
-              ? 'transform 0.12s ease-out'
-              : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
+              ? 'transform 0.40s cubic-bezier(0.25,0.46,0.45,0.94)'
+              : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
           }}
         >
           {/* Dark-mode overlay */}
