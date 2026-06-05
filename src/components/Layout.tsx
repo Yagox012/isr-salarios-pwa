@@ -41,17 +41,16 @@ const tabs = [
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
       <main
-        className="pb-[calc(env(safe-area-inset-bottom)+5rem)]"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 5rem)' }}
+        style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom), 12px) + 5rem)' }}
       >
         <Outlet />
       </main>
 
       <nav
         className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
         <div className="mx-auto flex max-w-md">
           {tabs.map(({ to, label, Icon, end }) => (
