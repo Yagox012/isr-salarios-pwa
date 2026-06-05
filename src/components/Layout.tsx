@@ -71,7 +71,7 @@ export default function Layout() {
             style={{ background: 'rgba(15,23,42,0.45)' }}
           />
 
-          {/* Sliding glass indicator circle */}
+          {/* Sliding glass indicator — pill que cubre todo el tab */}
           {activeIndex >= 0 && (
             <div
               className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
@@ -79,16 +79,18 @@ export default function Layout() {
                 width: '20%',
                 transform: `translateX(${activeIndex * 100}%)`,
                 transition: 'transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                padding: '5px 6px',
               }}
             >
               <div
-                className="h-[3.2rem] w-[3.2rem] rounded-full"
+                className="h-full w-full rounded-[1.4rem]"
                 style={{
-                  background: 'rgba(255,255,255,0.55)',
-                  boxShadow: '0 2px 16px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.9) inset',
-                  border: '1px solid rgba(255,255,255,0.75)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
+                  /* Gradiente radial: casi transparente en el centro, azul-blanco en los bordes */
+                  background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
+                  border: '1.5px solid rgba(96,165,250,0.55)',
+                  boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
                 }}
               />
             </div>
@@ -102,10 +104,10 @@ export default function Layout() {
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `flex flex-1 flex-col items-center gap-0.5 py-3 text-[11px] font-semibold transition-all duration-300 ${
+                  `flex flex-1 flex-col items-center gap-0.5 py-3 text-[10px] font-semibold transition-all duration-300 ${
                     isActive
-                      ? 'text-blue-900 dark:text-white'
-                      : 'text-slate-400/90 dark:text-slate-400'
+                      ? 'text-blue-800 dark:text-white'
+                      : 'text-slate-500 dark:text-slate-400'
                   }`
                 }
                 style={({ isActive }) => ({
