@@ -66,6 +66,8 @@ export default function Layout() {
   const [continuousT, setContinuousT] = useState<number | null>(null);
   const [isPressing,  setIsPressing]  = useState(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
+  // true solo durante el snap post-arrastre; false en clicks directos
+  const [useSpring,   setUseSpring]   = useState(false);
 
   /* Posición del indicador: explícita si la tenemos, sino desde activeIndex */
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
@@ -109,19 +111,13 @@ export default function Layout() {
 
   const handleTouchEnd = () => {
     const finalIdx = dragIndex ?? activeIndex;
-    /*
-     * 1. Fijamos continuousT al destino ANTES de desactivar isPressing.
-     *    Así la transición spring va desde la posición actual → destino,
-     *    sin jamás pasar por el viejo activeIndex (que causa el salto errático).
-     * 2. Desactivamos isPressing → habilita la transición spring.
-     * 3. Navegamos → actualiza pathname/activeIndex en segundo plano.
-     * 4. Después del spring (500 ms) limpiamos continuousT; para entonces
-     *    activeIndex ya coincide con finalIdx y no hay movimiento visible.
-     */
+    // Activa spring SOLO para el snap post-arrastre, no para clicks
+    setUseSpring(true);
     setContinuousT(finalIdx * 100);
     setIsPressing(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
+      setUseSpring(false);
       setContinuousT(null);
       setDragIndex(null);
     }, 500);
@@ -164,10 +160,10 @@ export default function Layout() {
               padding: '4px 5px',
               zIndex: 1,
               transform: `translateX(${indicatorT}%)`,
-              /* Spring al soltar; sin transición mientras arrastra */
-              transition: isPressing
-                ? 'none'
-                : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+              /* Spring solo al soltar arrastre; sin transición en drag ni en clicks */
+              transition: useSpring
+                ? 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)'
+                : 'none',
             }}
           >
             <div
