@@ -45,8 +45,9 @@ const N = tabs.length;
 export default function Layout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const tabsRef      = useRef<HTMLDivElement>(null);
-  const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const tabsRef        = useRef<HTMLDivElement>(null);
+  const releaseTimer   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const collapseTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
@@ -93,6 +94,7 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
+    clearTimeout(collapseTimer.current);
     isDraggingRef.current = false;
     const { T, idx } = fromX(e.touches[0].clientX);
     setIsDragging(false);
@@ -108,12 +110,14 @@ export default function Layout() {
     const finalIdx = dragIndex ?? activeIndex;
     setContinuousT(finalIdx * 100);
     setIsDragging(false);
-    setIsExpanded(false);
     navigate(tabs[finalIdx].to);
-    releaseTimer.current = setTimeout(() => {
-      setContinuousT(null);
-      setDragIndex(null);
-    }, 500);
+    collapseTimer.current = setTimeout(() => {
+      setIsExpanded(false);
+      releaseTimer.current = setTimeout(() => {
+        setContinuousT(null);
+        setDragIndex(null);
+      }, 600);
+    }, 150);
   };
 
   return (
