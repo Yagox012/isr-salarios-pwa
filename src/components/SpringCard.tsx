@@ -3,6 +3,7 @@ import { useState, type ComponentPropsWithoutRef, type ElementType } from 'react
 /**
  * SpringCard<T> — física de resorte al presionar.
  * Comprime rápido (0.08s ease-out) → rebota al soltar con overshoot (0.52s spring).
+ * GPU-accelerated vía will-change: transform.
  * Funciona como cualquier elemento: <SpringCard as={Link} to="..."> o <SpringCard as="button">
  */
 export function SpringCard<T extends ElementType = 'div'>({
