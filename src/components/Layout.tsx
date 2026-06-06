@@ -61,7 +61,7 @@ export default function Layout() {
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
   const navScale   = isExpanded ? 1.08 : 1;
 
-  const navTransition = 'transform 0.36s cubic-bezier(0.34,1.56,0.64,1)';
+  const navTransition = 'transform 0.58s cubic-bezier(0.34,1.56,0.64,1)';
 
   const fromX = useCallback((clientX: number) => {
     if (!tabsRef.current) return { T: activeIndex * 100, idx: activeIndex };
