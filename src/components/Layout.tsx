@@ -47,6 +47,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const tabsRef      = useRef<HTMLDivElement>(null);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const holdTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const activeIndex = tabs.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/')
@@ -54,14 +55,15 @@ export default function Layout() {
 
   const [continuousT, setContinuousT] = useState<number | null>(null);
   const [isExpanded,  setIsExpanded]  = useState(false);
+  // isHolding: >200ms o arrastrando → escala completa (1.08); tap rápido → 75% (1.06)
+  const [isHolding,   setIsHolding]   = useState(false);
   const [isDragging,  setIsDragging]  = useState(false);
   const isDraggingRef = useRef(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
-  const navScale   = isExpanded ? 1.08 : 1;
+  const navScale   = isHolding ? 1.08 : isExpanded ? 1.06 : 1;
 
-  // Pop instantáneo al expandir (~80ms), spring con rebote al retraer (~420ms)
   const navTransition = isExpanded
     ? 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)'
     : 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)';
@@ -84,6 +86,8 @@ export default function Layout() {
       if (!isDraggingRef.current) {
         isDraggingRef.current = true;
         setIsDragging(true);
+        clearTimeout(holdTimer.current);
+        setIsHolding(true); // arrastre = escala completa inmediata
       }
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
@@ -96,20 +100,26 @@ export default function Layout() {
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     clearTimeout(releaseTimer.current);
+    clearTimeout(holdTimer.current);
     isDraggingRef.current = false;
     const { T, idx } = fromX(e.touches[0].clientX);
     setIsDragging(false);
+    setIsHolding(false);  // tap empieza en escala reducida
     setIsExpanded(true);
     setContinuousT(T);
     setDragIndex(idx);
+    // después de 200ms sin soltar ni mover → escala completa
+    holdTimer.current = setTimeout(() => setIsHolding(true), 200);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
+    clearTimeout(holdTimer.current);
     isDraggingRef.current = false;
     const finalIdx = dragIndex ?? activeIndex;
     setContinuousT(finalIdx * 100);
     setIsDragging(false);
+    setIsHolding(false);
     setIsExpanded(false);
     navigate(tabs[finalIdx].to);
     releaseTimer.current = setTimeout(() => {
