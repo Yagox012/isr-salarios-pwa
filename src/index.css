@@ -2,6 +2,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {
+  /* Respeta el tamaño de fuente del sistema (accesibilidad) sin ajuste automático de iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background-color: #f8fafc;
   /* Extiende el color del header detrás de la Dynamic Island / status bar */
   background-image: linear-gradient(
