@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 /* --- Íconos --- */
-const base = 'h-[22px] w-[22px]';
+const base = 'h-[1.375rem] w-[1.375rem]';
 const IconInicio = () => (
   <svg className={base} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9.5 12 3l9 6.5" /><path d="M5 9v11h14V9" />
@@ -203,7 +203,7 @@ export default function Layout() {
                   key={to}
                   type="button"
                   onClick={() => navigate(to)}
-                  className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[10px] font-semibold transition-colors duration-150 ${
+                  className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[0.625rem] font-semibold transition-colors duration-150 ${
                     isActive
                       ? 'text-slate-900 dark:text-white'
                       : 'text-slate-500 dark:text-slate-300'

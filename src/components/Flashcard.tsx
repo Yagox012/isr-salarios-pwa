@@ -19,7 +19,7 @@ export default function Flashcard({ card }: { card: FlashcardType }) {
       >
         {volteada ? 'Respuesta' : 'Pregunta'}
       </span>
-      <span className="mt-2 text-[15px] leading-relaxed text-slate-800 dark:text-slate-100">
+      <span className="mt-2 text-sm leading-relaxed text-slate-800 dark:text-slate-100">
         {volteada ? card.respuesta : card.pregunta}
       </span>
       <span className="mt-3 text-xs text-slate-400 dark:text-slate-500">Toca para voltear</span>

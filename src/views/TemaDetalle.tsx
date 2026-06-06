@@ -73,7 +73,7 @@ export default function TemaDetalle() {
               {tema.teoria.map((parrafo, i) => (
                 <p
                   key={i}
-                  className="spring-enter text-[15px] leading-relaxed text-slate-700 dark:text-slate-300"
+                  className="spring-enter text-sm leading-relaxed text-slate-700 dark:text-slate-300"
                   style={{ animationDelay: `${i * 0.06}s` }}
                 >
                   {parrafo}
