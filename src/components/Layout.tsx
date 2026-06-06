@@ -62,7 +62,7 @@ export default function Layout() {
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
-  const navScale   = isHolding ? 1.08 : isExpanded ? 1.06 : 1;
+  const navScale   = isExpanded ? 1.08 : 1;
 
   const navTransition = isExpanded
     ? 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)'
