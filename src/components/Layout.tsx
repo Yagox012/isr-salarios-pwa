@@ -190,9 +190,10 @@ export default function Layout() {
                     ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.18) 40%, transparent 60%'
                     : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.80) 35%, transparent 56%'
                 })`,
+                transformOrigin: `${glowX}% 50%`,
                 animation: glowPhase === 'press'
-                  ? 'nav-glow-press 0.6s ease-out forwards'
-                  : 'nav-glow-release 0.6s ease-out forwards',
+                  ? 'nav-glow-press 0.85s ease-out forwards'
+                  : 'nav-glow-release 0.85s ease-out forwards',
               }}
             />
           )}
