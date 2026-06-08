@@ -185,10 +185,10 @@ export default function Layout() {
               key={glowKey}
               className="pointer-events-none absolute inset-0"
               style={{
-                background: `radial-gradient(ellipse 200% 130% at ${glowX}% 50%, ${
+                background: `radial-gradient(ellipse 320% 130% at ${glowX}% 50%, ${
                   isDark
-                    ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.18) 40%, transparent 60%'
-                    : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.80) 35%, transparent 56%'
+                    ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.18) 28%, rgba(200,230,255,0.04) 40%, transparent 48%'
+                    : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.80) 22%, rgba(210,240,255,0.20) 36%, transparent 44%'
                 })`,
                 transformOrigin: `${glowX}% 50%`,
                 animation: glowPhase === 'press'
