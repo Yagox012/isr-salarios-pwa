@@ -61,6 +61,18 @@ export default function Layout() {
   const [glowKey,     setGlowKey]     = useState(0);
   const [glowPhase,   setGlowPhase]   = useState<'press' | 'release' | null>(null);
   const [glowX,       setGlowX]       = useState(50);
+  const [isDark,      setIsDark]      = useState(() =>
+    document.documentElement.classList.contains('dark')
+  );
+
+  useEffect(() => {
+    const el = document.documentElement;
+    const obs = new MutationObserver(() =>
+      setIsDark(el.classList.contains('dark'))
+    );
+    obs.observe(el, { attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
 
   const getGlowX = useCallback((clientX: number) => {
     if (!tabsRef.current) return 50;
@@ -173,7 +185,11 @@ export default function Layout() {
               key={glowKey}
               className="pointer-events-none absolute inset-0"
               style={{
-                background: `radial-gradient(ellipse 80% 160% at ${glowX}% 50%, rgba(255,255,255,0.72) 0%, rgba(210,240,255,0.45) 40%, transparent 70%)`,
+                background: `radial-gradient(ellipse 220% 160% at ${glowX}% 50%, ${
+                  isDark
+                    ? 'rgba(255,255,255,0.28) 0%, rgba(200,230,255,0.12) 45%, transparent 65%'
+                    : 'rgba(255,255,255,0.90) 0%, rgba(210,240,255,0.55) 40%, transparent 65%'
+                })`,
                 animation: glowPhase === 'press'
                   ? 'nav-glow-press 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
                   : 'nav-glow-release 0.65s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
@@ -185,7 +201,11 @@ export default function Layout() {
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse 70% 160% at ${glowX}% 50%, rgba(255,255,255,0.22) 0%, rgba(210,240,255,0.10) 55%, transparent 80%)`,
+              background: `radial-gradient(ellipse 220% 160% at ${glowX}% 50%, ${
+                isDark
+                  ? 'rgba(255,255,255,0.10) 0%, rgba(200,230,255,0.04) 55%, transparent 75%'
+                  : 'rgba(255,255,255,0.38) 0%, rgba(210,240,255,0.15) 50%, transparent 72%'
+              })`,
               opacity: isExpanded ? 1 : 0,
               transition: 'opacity 0.35s ease',
             }}
