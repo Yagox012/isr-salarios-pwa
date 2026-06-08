@@ -80,15 +80,14 @@ header {
   animation: section-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* ── Nav glow — onda horizontal que llena todo el nav de arriba a abajo ── */
+/* ── Nav glow — burst ancho que se desvanece (held angosto aparece aparte) ── */
 @keyframes nav-glow-press {
-  0%   { opacity: 0;    transform: scaleX(0.08); }
-  30%  { opacity: 1; }
-  100% { opacity: 0.7;  transform: scaleX(1); }
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 @keyframes nav-glow-release {
-  0%   { opacity: 0.7;  transform: scaleX(0.9); }
-  25%  { opacity: 1;    transform: scaleX(1); }
-  100% { opacity: 0;    transform: scaleX(1.1); }
+  0%   { opacity: 0.8; }
+  20%  { opacity: 1;   }
+  100% { opacity: 0;   }
 }

@@ -179,25 +179,25 @@ export default function Layout() {
             style={{ background: 'rgba(15,23,42,0.32)' }}
           />
 
-          {/* Glow on press / release — nace donde está el dedo */}
+          {/* Burst ancho al presionar/soltar — se expande y desvanece */}
           {glowPhase && (
             <div
               key={glowKey}
               className="pointer-events-none absolute inset-0"
               style={{
-                background: `radial-gradient(ellipse 55% 130% at ${glowX}% 50%, ${
+                background: `radial-gradient(ellipse 200% 130% at ${glowX}% 50%, ${
                   isDark
-                    ? 'rgba(255,255,255,0.30) 0%, rgba(200,230,255,0.14) 35%, rgba(200,230,255,0.04) 55%, transparent 70%'
-                    : 'rgba(255,255,255,0.88) 0%, rgba(210,240,255,0.50) 30%, rgba(210,240,255,0.12) 52%, transparent 68%'
+                    ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.10) 40%, transparent 60%'
+                    : 'rgba(255,255,255,0.75) 0%, rgba(210,240,255,0.38) 38%, transparent 58%'
                 })`,
                 animation: glowPhase === 'press'
-                  ? 'nav-glow-press 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
-                  : 'nav-glow-release 0.65s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
+                  ? 'nav-glow-press 0.6s ease-out forwards'
+                  : 'nav-glow-release 0.6s ease-out forwards',
               }}
             />
           )}
 
-          {/* Held glow — sigue el dedo mientras está presionado */}
+          {/* Held glow angosto — aparece cerca del dedo y lo sigue */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
@@ -207,7 +207,7 @@ export default function Layout() {
                   : 'rgba(255,255,255,0.42) 0%, rgba(210,240,255,0.16) 38%, transparent 60%'
               })`,
               opacity: isExpanded ? 1 : 0,
-              transition: 'opacity 0.35s ease',
+              transition: isExpanded ? 'opacity 0.5s ease' : 'opacity 0.35s ease',
             }}
           />
 
