@@ -187,8 +187,8 @@ export default function Layout() {
               style={{
                 background: `radial-gradient(ellipse 200% 130% at ${glowX}% 50%, ${
                   isDark
-                    ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.10) 40%, transparent 60%'
-                    : 'rgba(255,255,255,0.75) 0%, rgba(210,240,255,0.38) 38%, transparent 58%'
+                    ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.18) 40%, transparent 60%'
+                    : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.80) 35%, transparent 56%'
                 })`,
                 animation: glowPhase === 'press'
                   ? 'nav-glow-press 0.6s ease-out forwards'
@@ -203,8 +203,8 @@ export default function Layout() {
             style={{
               background: `radial-gradient(ellipse 55% 130% at ${glowX}% 50%, ${
                 isDark
-                  ? 'rgba(255,255,255,0.12) 0%, rgba(200,230,255,0.05) 40%, transparent 62%'
-                  : 'rgba(255,255,255,0.42) 0%, rgba(210,240,255,0.16) 38%, transparent 60%'
+                  ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.09) 40%, transparent 62%'
+                  : 'rgba(255,255,255,0.82) 0%, rgba(210,240,255,0.42) 35%, transparent 58%'
               })`,
               opacity: isExpanded ? 1 : 0,
               transition: isExpanded ? 'opacity 0.5s ease' : 'opacity 0.35s ease',
