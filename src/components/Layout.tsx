@@ -74,12 +74,9 @@ export default function Layout() {
     return () => obs.disconnect();
   }, []);
 
-  const navWidthRef = useRef(340);
-
   const getGlowX = useCallback((clientX: number) => {
     if (!tabsRef.current) return 50;
     const { left, width } = tabsRef.current.getBoundingClientRect();
-    navWidthRef.current = width;
     return Math.max(0, Math.min(100, ((clientX - left) / width) * 100));
   }, []);
 
@@ -161,77 +158,61 @@ export default function Layout() {
         className="fixed inset-x-0 bottom-0 z-10 flex justify-center"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
-        {/* Wrapper: maneja escala y contiene los glows sin clip */}
-        <div
-          className="relative mx-6 w-full max-w-md"
+        <nav
+          className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
+            background: 'rgba(255,255,255,0.02)',
+            backdropFilter: 'blur(40px) saturate(2.2)',
+            WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.32) inset',
+            overflow: 'hidden',
             willChange: 'transform',
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
             transition: navTransition,
           }}
         >
-          {/* ── Glow layer — FUERA del overflow:hidden del nav ── */}
-          {(() => {
-            const ext = 40; // px de extensión a cada lado
-            const nw  = navWidthRef.current;
-            // Reajusta glowX al espacio del div extendido
-            const gx  = ((glowX / 100) * nw + ext) / (nw + ext * 2) * 100;
-            return (
-              <>
-                {/* Burst */}
-                {glowPhase && (
-                  <div
-                    key={glowKey}
-                    className="pointer-events-none absolute inset-y-0 rounded-[2rem]"
-                    style={{
-                      left: -ext, right: -ext,
-                      background: `radial-gradient(ellipse 160% 130% at ${gx}% 50%, ${
-                        isDark
-                          ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.20) 28%, rgba(200,230,255,0.05) 46%, transparent 55%'
-                          : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.75) 22%, rgba(210,240,255,0.14) 40%, transparent 52%'
-                      })`,
-                      transformOrigin: `${gx}% 50%`,
-                      animation: glowPhase === 'press'
-                        ? 'nav-glow-press 0.85s ease-out forwards'
-                        : 'nav-glow-release 0.85s ease-out forwards',
-                    }}
-                  />
-                )}
-                {/* Held — sigue el dedo */}
-                <div
-                  className="pointer-events-none absolute inset-y-0 rounded-[2rem]"
-                  style={{
-                    left: -ext, right: -ext,
-                    background: `radial-gradient(ellipse 55% 130% at ${gx}% 50%, ${
-                      isDark
-                        ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.08) 38%, transparent 55%'
-                        : 'rgba(255,255,255,0.82) 0%, rgba(210,240,255,0.38) 32%, transparent 52%'
-                    })`,
-                    opacity: isExpanded ? 1 : 0,
-                    transition: isExpanded ? 'opacity 0.5s ease' : 'opacity 0.35s ease',
-                  }}
-                />
-              </>
-            );
-          })()}
-
-          {/* Nav visual — overflow:hidden para pill e indicador */}
-          <nav
-            className="relative rounded-[2rem]"
-            style={{
-              background: 'rgba(255,255,255,0.02)',
-              backdropFilter: 'blur(40px) saturate(2.2)',
-              WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.32) inset',
-              overflow: 'hidden',
-            }}
-          >
             {/* Dark-mode overlay */}
             <div
               className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
               style={{ background: 'rgba(15,23,42,0.32)' }}
+            />
+
+            {/* Burst — mask lateral suaviza bordes antes del clip */}
+            {glowPhase && (
+              <div
+                key={glowKey}
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background: `radial-gradient(ellipse 160% 130% at ${glowX}% 50%, ${
+                    isDark
+                      ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.20) 28%, rgba(200,230,255,0.05) 46%, transparent 55%'
+                      : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.75) 22%, rgba(210,240,255,0.14) 40%, transparent 52%'
+                  })`,
+                  maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)',
+                  WebkitMaskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)',
+                  transformOrigin: `${glowX}% 50%`,
+                  animation: glowPhase === 'press'
+                    ? 'nav-glow-press 0.85s ease-out forwards'
+                    : 'nav-glow-release 0.85s ease-out forwards',
+                }}
+              />
+            )}
+            {/* Held */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `radial-gradient(ellipse 55% 130% at ${glowX}% 50%, ${
+                  isDark
+                    ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.08) 38%, transparent 55%'
+                    : 'rgba(255,255,255,0.82) 0%, rgba(210,240,255,0.38) 32%, transparent 52%'
+                })`,
+                maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)',
+                opacity: isExpanded ? 1 : 0,
+                transition: isExpanded ? 'opacity 0.5s ease' : 'opacity 0.35s ease',
+              }}
             />
 
             {/* Indicador — pill rectangular */}
@@ -303,7 +284,6 @@ export default function Layout() {
               })}
             </div>
           </nav>
-        </div>
       </div>
     </div>
   );
