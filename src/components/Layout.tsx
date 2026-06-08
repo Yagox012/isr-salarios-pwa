@@ -60,6 +60,13 @@ export default function Layout() {
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
   const [glowKey,     setGlowKey]     = useState(0);
   const [glowPhase,   setGlowPhase]   = useState<'press' | 'release' | null>(null);
+  const [glowX,       setGlowX]       = useState(50);
+
+  const getGlowX = useCallback((clientX: number) => {
+    if (!tabsRef.current) return 50;
+    const { left, width } = tabsRef.current.getBoundingClientRect();
+    return Math.max(0, Math.min(100, ((clientX - left) / width) * 100));
+  }, []);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
   const navScale   = isExpanded ? 1.08 : 1;
@@ -88,10 +95,11 @@ export default function Layout() {
       const { T, idx } = fromX(e.touches[0].clientX);
       setContinuousT(T);
       setDragIndex(idx);
+      setGlowX(getGlowX(e.touches[0].clientX));
     };
     el.addEventListener('touchmove', onMove, { passive: false });
     return () => el.removeEventListener('touchmove', onMove);
-  }, [fromX]);
+  }, [fromX, getGlowX]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
@@ -103,6 +111,7 @@ export default function Layout() {
     setIsExpanded(true);
     setContinuousT(T);
     setDragIndex(idx);
+    setGlowX(getGlowX(e.touches[0].clientX));
     setGlowPhase('press');
     setGlowKey(k => k + 1);
   };
@@ -114,6 +123,7 @@ export default function Layout() {
     setContinuousT(finalIdx * 100);
     setIsDragging(false);
     navigate(tabs[finalIdx].to);
+    setGlowX(getGlowX(e.changedTouches[0].clientX));
     setGlowPhase('release');
     setGlowKey(k => k + 1);
     collapseTimer.current = setTimeout(() => {
@@ -139,11 +149,11 @@ export default function Layout() {
         <nav
           className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
-            background: 'rgba(255,255,255,0.08)',
+            background: 'rgba(255,255,255,0.04)',
             backdropFilter: 'blur(40px) saturate(2.2)',
             WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
-            border: '1px solid rgba(255,255,255,0.28)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.4) inset',
+            border: '1px solid rgba(255,255,255,0.22)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.32) inset',
             overflow: 'hidden',
             willChange: 'transform',
             transform: `scale(${navScale})`,
@@ -157,13 +167,13 @@ export default function Layout() {
             style={{ background: 'rgba(15,23,42,0.32)' }}
           />
 
-          {/* Glow on press / release — horizontal, cubre todo el nav de arriba a abajo */}
+          {/* Glow on press / release — nace donde está el dedo */}
           {glowPhase && (
             <div
               key={glowKey}
               className="pointer-events-none absolute inset-0"
               style={{
-                background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.55) 30%, rgba(210,240,255,0.65) 50%, rgba(255,255,255,0.55) 70%, transparent 100%)',
+                background: `radial-gradient(ellipse 80% 160% at ${glowX}% 50%, rgba(255,255,255,0.72) 0%, rgba(210,240,255,0.45) 40%, transparent 70%)`,
                 animation: glowPhase === 'press'
                   ? 'nav-glow-press 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
                   : 'nav-glow-release 0.65s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
@@ -171,13 +181,13 @@ export default function Layout() {
             />
           )}
 
-          {/* Held glow — persiste mientras el dedo está abajo */}
+          {/* Held glow — sigue el dedo mientras está presionado */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background: 'rgba(255,255,255,0.12)',
+              background: `radial-gradient(ellipse 70% 160% at ${glowX}% 50%, rgba(255,255,255,0.22) 0%, rgba(210,240,255,0.10) 55%, transparent 80%)`,
               opacity: isExpanded ? 1 : 0,
-              transition: 'opacity 0.4s ease',
+              transition: 'opacity 0.35s ease',
             }}
           />
 
