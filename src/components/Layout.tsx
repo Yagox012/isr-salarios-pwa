@@ -74,9 +74,12 @@ export default function Layout() {
     return () => obs.disconnect();
   }, []);
 
+  const navWidthRef = useRef(340);
+
   const getGlowX = useCallback((clientX: number) => {
     if (!tabsRef.current) return 50;
     const { left, width } = tabsRef.current.getBoundingClientRect();
+    navWidthRef.current = width;
     return Math.max(0, Math.min(100, ((clientX - left) / width) * 100));
   }, []);
 
@@ -158,129 +161,149 @@ export default function Layout() {
         className="fixed inset-x-0 bottom-0 z-10 flex justify-center"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
-        <nav
-          className="relative mx-6 w-full max-w-md rounded-[2rem]"
+        {/* Wrapper: maneja escala y contiene los glows sin clip */}
+        <div
+          className="relative mx-6 w-full max-w-md"
           style={{
-            background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(40px) saturate(2.2)',
-            WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.32) inset',
-            overflow: 'hidden',
             willChange: 'transform',
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
             transition: navTransition,
           }}
         >
-          {/* Dark-mode overlay */}
-          <div
-            className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
-            style={{ background: 'rgba(15,23,42,0.32)' }}
-          />
-
-          {/* Burst ancho al presionar/soltar — se expande y desvanece */}
-          {glowPhase && (
-            <div
-              key={glowKey}
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background: `radial-gradient(ellipse 160% 130% at ${glowX}% 50%, ${
-                  isDark
-                    ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.20) 30%, rgba(200,230,255,0.06) 48%, transparent 58%'
-                    : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.75) 25%, rgba(210,240,255,0.15) 44%, transparent 55%'
-                })`,
-                transformOrigin: `${glowX}% 50%`,
-                animation: glowPhase === 'press'
-                  ? 'nav-glow-press 0.85s ease-out forwards'
-                  : 'nav-glow-release 0.85s ease-out forwards',
-              }}
-            />
-          )}
-
-          {/* Held glow angosto — aparece cerca del dedo y lo sigue */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background: `radial-gradient(ellipse 55% 130% at ${glowX}% 50%, ${
-                isDark
-                  ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.09) 40%, transparent 62%'
-                  : 'rgba(255,255,255,0.82) 0%, rgba(210,240,255,0.42) 35%, transparent 58%'
-              })`,
-              opacity: isExpanded ? 1 : 0,
-              transition: isExpanded ? 'opacity 0.5s ease' : 'opacity 0.35s ease',
-            }}
-          />
-
-          {/* Indicador — pill rectangular siempre, sin cambio de forma */}
-          <div
-            className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
-            style={{
-              width: `${100 / N}%`,
-              padding: '4px 5px',
-              zIndex: 1,
-              transform: `translateX(${indicatorT}%)`,
-              transition: isDragging
-                ? 'none'
-                : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
-            }}
-          >
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
-                border: '1.5px solid rgba(96,165,250,0.55)',
-                boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: '1.2rem',
-              }}
-            />
-          </div>
-
-          {/* Tabs */}
-          <div
-            ref={tabsRef}
-            className="relative flex"
-            style={{
-              zIndex: 2,
-              touchAction: 'none',
-              WebkitUserSelect: 'none',
-              userSelect: 'none',
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onContextMenu={e => e.preventDefault()}
-          >
-            {tabs.map(({ to, label, Icon, end }) => {
-              const isActive = end
-                ? pathname === to
-                : pathname === to || pathname.startsWith(to + '/');
-              return (
-                <button
-                  key={to}
-                  type="button"
-                  onClick={() => navigate(to)}
-                  className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[0.625rem] font-semibold transition-colors duration-150 ${
-                    isActive
-                      ? 'text-slate-900 dark:text-white'
-                      : 'text-slate-500 dark:text-slate-300'
-                  }`}
+          {/* ── Glow layer — FUERA del overflow:hidden del nav ── */}
+          {(() => {
+            const ext = 40; // px de extensión a cada lado
+            const nw  = navWidthRef.current;
+            // Reajusta glowX al espacio del div extendido
+            const gx  = ((glowX / 100) * nw + ext) / (nw + ext * 2) * 100;
+            return (
+              <>
+                {/* Burst */}
+                {glowPhase && (
+                  <div
+                    key={glowKey}
+                    className="pointer-events-none absolute inset-y-0 rounded-[2rem]"
+                    style={{
+                      left: -ext, right: -ext,
+                      background: `radial-gradient(ellipse 160% 130% at ${gx}% 50%, ${
+                        isDark
+                          ? 'rgba(255,255,255,0.42) 0%, rgba(200,230,255,0.20) 28%, rgba(200,230,255,0.05) 46%, transparent 55%'
+                          : 'rgba(255,255,255,1.00) 0%, rgba(210,240,255,0.75) 22%, rgba(210,240,255,0.14) 40%, transparent 52%'
+                      })`,
+                      transformOrigin: `${gx}% 50%`,
+                      animation: glowPhase === 'press'
+                        ? 'nav-glow-press 0.85s ease-out forwards'
+                        : 'nav-glow-release 0.85s ease-out forwards',
+                    }}
+                  />
+                )}
+                {/* Held — sigue el dedo */}
+                <div
+                  className="pointer-events-none absolute inset-y-0 rounded-[2rem]"
                   style={{
-                    WebkitTapHighlightColor: 'transparent',
-                    background: 'none',
-                    border: 'none',
-                    outline: 'none',
+                    left: -ext, right: -ext,
+                    background: `radial-gradient(ellipse 55% 130% at ${gx}% 50%, ${
+                      isDark
+                        ? 'rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.08) 38%, transparent 55%'
+                        : 'rgba(255,255,255,0.82) 0%, rgba(210,240,255,0.38) 32%, transparent 52%'
+                    })`,
+                    opacity: isExpanded ? 1 : 0,
+                    transition: isExpanded ? 'opacity 0.5s ease' : 'opacity 0.35s ease',
                   }}
-                >
-                  <Icon />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+                />
+              </>
+            );
+          })()}
+
+          {/* Nav visual — overflow:hidden para pill e indicador */}
+          <nav
+            className="relative rounded-[2rem]"
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              backdropFilter: 'blur(40px) saturate(2.2)',
+              WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
+              border: '1px solid rgba(255,255,255,0.22)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.32) inset',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Dark-mode overlay */}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
+              style={{ background: 'rgba(15,23,42,0.32)' }}
+            />
+
+            {/* Indicador — pill rectangular */}
+            <div
+              className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
+              style={{
+                width: `${100 / N}%`,
+                padding: '4px 5px',
+                zIndex: 1,
+                transform: `translateX(${indicatorT}%)`,
+                transition: isDragging
+                  ? 'none'
+                  : 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: 'radial-gradient(ellipse at 50% 45%, rgba(219,234,254,0.05) 0%, rgba(147,197,253,0.38) 60%, rgba(96,165,250,0.28) 100%)',
+                  border: '1.5px solid rgba(96,165,250,0.55)',
+                  boxShadow: '0 1px 16px rgba(59,130,246,0.18), 0 1px 0 rgba(255,255,255,0.7) inset',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  borderRadius: '1.2rem',
+                }}
+              />
+            </div>
+
+            {/* Tabs */}
+            <div
+              ref={tabsRef}
+              className="relative flex"
+              style={{
+                zIndex: 2,
+                touchAction: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onContextMenu={e => e.preventDefault()}
+            >
+              {tabs.map(({ to, label, Icon, end }) => {
+                const isActive = end
+                  ? pathname === to
+                  : pathname === to || pathname.startsWith(to + '/');
+                return (
+                  <button
+                    key={to}
+                    type="button"
+                    onClick={() => navigate(to)}
+                    className={`flex flex-1 flex-col items-center gap-0.5 py-3 text-[0.625rem] font-semibold transition-colors duration-150 ${
+                      isActive
+                        ? 'text-slate-900 dark:text-white'
+                        : 'text-slate-500 dark:text-slate-300'
+                    }`}
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                      background: 'none',
+                      border: 'none',
+                      outline: 'none',
+                    }}
+                  >
+                    <Icon />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
       </div>
     </div>
   );
