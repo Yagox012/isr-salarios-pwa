@@ -139,11 +139,11 @@ export default function Layout() {
         <nav
           className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
-            background: 'rgba(255,255,255,0.18)',
-            backdropFilter: 'blur(36px) saturate(2)',
-            WebkitBackdropFilter: 'blur(36px) saturate(2)',
-            border: '1px solid rgba(255,255,255,0.38)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.5) inset',
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(40px) saturate(2.2)',
+            WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
+            border: '1px solid rgba(255,255,255,0.28)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.4) inset',
             overflow: 'hidden',
             willChange: 'transform',
             transform: `scale(${navScale})`,
@@ -157,13 +157,13 @@ export default function Layout() {
             style={{ background: 'rgba(15,23,42,0.32)' }}
           />
 
-          {/* Glow on press / release */}
+          {/* Glow on press / release — horizontal, cubre todo el nav de arriba a abajo */}
           {glowPhase && (
             <div
               key={glowKey}
               className="pointer-events-none absolute inset-0"
               style={{
-                background: 'radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.72) 0%, rgba(186,230,255,0.38) 45%, transparent 75%)',
+                background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.55) 30%, rgba(210,240,255,0.65) 50%, rgba(255,255,255,0.55) 70%, transparent 100%)',
                 animation: glowPhase === 'press'
                   ? 'nav-glow-press 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
                   : 'nav-glow-release 0.65s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
@@ -175,7 +175,7 @@ export default function Layout() {
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background: 'radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.28) 0%, rgba(186,230,255,0.12) 55%, transparent 75%)',
+              background: 'rgba(255,255,255,0.12)',
               opacity: isExpanded ? 1 : 0,
               transition: 'opacity 0.4s ease',
             }}
