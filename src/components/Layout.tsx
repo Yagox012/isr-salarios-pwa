@@ -58,6 +58,8 @@ export default function Layout() {
   const [isDragging,  setIsDragging]  = useState(false);
   const isDraggingRef = useRef(false);
   const [dragIndex,   setDragIndex]   = useState<number | null>(null);
+  const [glowKey,     setGlowKey]     = useState(0);
+  const [glowPhase,   setGlowPhase]   = useState<'press' | 'release' | null>(null);
 
   const indicatorT = continuousT !== null ? continuousT : activeIndex * 100;
   const navScale   = isExpanded ? 1.08 : 1;
@@ -101,7 +103,8 @@ export default function Layout() {
     setIsExpanded(true);
     setContinuousT(T);
     setDragIndex(idx);
-    // después de 200ms sin soltar ni mover → escala completa
+    setGlowPhase('press');
+    setGlowKey(k => k + 1);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -111,6 +114,8 @@ export default function Layout() {
     setContinuousT(finalIdx * 100);
     setIsDragging(false);
     navigate(tabs[finalIdx].to);
+    setGlowPhase('release');
+    setGlowKey(k => k + 1);
     collapseTimer.current = setTimeout(() => {
       setIsExpanded(false);
       releaseTimer.current = setTimeout(() => {
@@ -134,14 +139,13 @@ export default function Layout() {
         <nav
           className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
-            background: 'rgba(255,255,255,0.38)',
-            backdropFilter: 'blur(32px) saturate(1.8)',
-            WebkitBackdropFilter: 'blur(32px) saturate(1.8)',
-            border: '1px solid rgba(255,255,255,0.55)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset',
-            overflow: 'visible',
+            background: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(36px) saturate(2)',
+            WebkitBackdropFilter: 'blur(36px) saturate(2)',
+            border: '1px solid rgba(255,255,255,0.38)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.5) inset',
+            overflow: 'hidden',
             willChange: 'transform',
-            /* barra crece hacia arriba al presionar */
             transform: `scale(${navScale})`,
             transformOrigin: 'center bottom',
             transition: navTransition,
@@ -150,7 +154,31 @@ export default function Layout() {
           {/* Dark-mode overlay */}
           <div
             className="pointer-events-none absolute inset-0 rounded-[2rem] hidden dark:block"
-            style={{ background: 'rgba(15,23,42,0.45)' }}
+            style={{ background: 'rgba(15,23,42,0.32)' }}
+          />
+
+          {/* Glow on press / release */}
+          {glowPhase && (
+            <div
+              key={glowKey}
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: 'radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.72) 0%, rgba(186,230,255,0.38) 45%, transparent 75%)',
+                animation: glowPhase === 'press'
+                  ? 'nav-glow-press 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
+                  : 'nav-glow-release 0.65s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
+              }}
+            />
+          )}
+
+          {/* Held glow — persiste mientras el dedo está abajo */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.28) 0%, rgba(186,230,255,0.12) 55%, transparent 75%)',
+              opacity: isExpanded ? 1 : 0,
+              transition: 'opacity 0.4s ease',
+            }}
           />
 
           {/* Indicador — pill rectangular siempre, sin cambio de forma */}
