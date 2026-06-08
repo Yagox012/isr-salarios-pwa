@@ -149,7 +149,7 @@ export default function Layout() {
         <nav
           className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
-            background: 'rgba(255,255,255,0.04)',
+            background: 'rgba(255,255,255,0.02)',
             backdropFilter: 'blur(40px) saturate(2.2)',
             WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
             border: '1px solid rgba(255,255,255,0.22)',
