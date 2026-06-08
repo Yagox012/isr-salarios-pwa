@@ -185,10 +185,10 @@ export default function Layout() {
               key={glowKey}
               className="pointer-events-none absolute inset-0"
               style={{
-                background: `radial-gradient(ellipse 220% 160% at ${glowX}% 50%, ${
+                background: `radial-gradient(ellipse 55% 130% at ${glowX}% 50%, ${
                   isDark
-                    ? 'rgba(255,255,255,0.28) 0%, rgba(200,230,255,0.12) 45%, transparent 65%'
-                    : 'rgba(255,255,255,0.90) 0%, rgba(210,240,255,0.55) 40%, transparent 65%'
+                    ? 'rgba(255,255,255,0.30) 0%, rgba(200,230,255,0.14) 35%, rgba(200,230,255,0.04) 55%, transparent 70%'
+                    : 'rgba(255,255,255,0.88) 0%, rgba(210,240,255,0.50) 30%, rgba(210,240,255,0.12) 52%, transparent 68%'
                 })`,
                 animation: glowPhase === 'press'
                   ? 'nav-glow-press 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
@@ -201,10 +201,10 @@ export default function Layout() {
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse 220% 160% at ${glowX}% 50%, ${
+              background: `radial-gradient(ellipse 55% 130% at ${glowX}% 50%, ${
                 isDark
-                  ? 'rgba(255,255,255,0.10) 0%, rgba(200,230,255,0.04) 55%, transparent 75%'
-                  : 'rgba(255,255,255,0.38) 0%, rgba(210,240,255,0.15) 50%, transparent 72%'
+                  ? 'rgba(255,255,255,0.12) 0%, rgba(200,230,255,0.05) 40%, transparent 62%'
+                  : 'rgba(255,255,255,0.42) 0%, rgba(210,240,255,0.16) 38%, transparent 60%'
               })`,
               opacity: isExpanded ? 1 : 0,
               transition: 'opacity 0.35s ease',
