@@ -161,11 +161,11 @@ export default function Layout() {
         <nav
           className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
-            background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(40px) saturate(2.2)',
-            WebkitBackdropFilter: 'blur(40px) saturate(2.2)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.32) inset',
+            background: 'rgba(255,255,255,0.28)',
+            backdropFilter: 'blur(40px) saturate(1.8)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
+            border: '1px solid rgba(255,255,255,0.50)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.65) inset',
             overflow: 'hidden',
             willChange: 'transform',
             transform: `scale(${navScale})`,
