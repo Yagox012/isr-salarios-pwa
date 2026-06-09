@@ -161,7 +161,7 @@ export default function Layout() {
         <nav
           className="relative mx-6 w-full max-w-md rounded-[2rem]"
           style={{
-            background: isDark ? 'rgba(15,23,42,0.14)' : 'rgba(255,255,255,0.14)',
+            background: isDark ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.04)',
             backdropFilter: isDark
               ? 'blur(28px) saturate(0.7) brightness(0.65)'
               : 'blur(28px) saturate(1.2) brightness(1.05)',
